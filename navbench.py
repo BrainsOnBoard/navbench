@@ -22,13 +22,13 @@ def read_image_database(path):
 # Returns a greyscale image of type uint8
 def read_image(path):
     im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    assert (im.dtype == np.uint8)
-    return im
+    info = np.iinfo(im.dtype)
+    return im.astype(np.float) / info.max
 
 
 def image_diff(im1, im2):
     d = cv2.absdiff(im1, im2)
-    return d.mean() / 255
+    return d.mean()
 
 
 def get_route_idf(images, snap):
