@@ -23,26 +23,27 @@ def read_image_database(path):
     return entries
 
 
-def read_image(path, size=()):
-    """Returns a greyscale image of type float."""
-    im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-
-    # Convert to normalised matrix of floats
-    info = np.iinfo(im.dtype)
-    im = im.astype(np.float) / info.max
-
-    return cv2.resize(im, size) if size else im
-
-
 def read_images(paths, size=()):
+    """Returns greyscale image(s) of type float."""
+
+    # Single string as input
+    if isinstance(paths, str):
+        im = cv2.imread(paths, cv2.IMREAD_GRAYSCALE)
+
+        # Convert to normalised matrix of floats
+        info = np.iinfo(im.dtype)
+        im = im.astype(np.float) / info.max
+
+        return cv2.resize(im, size) if size else im
+
     if not paths:
         return []
 
-    im0 = read_image(paths[0], size)
+    im0 = read_images(paths[0], size)
     images = np.zeros([im0.shape[0], im0.shape[1], len(paths)], dtype=np.float)
     images[:, :, 0] = im0
     for i in range(1, len(paths)):
-        images[:, :, i] = read_image(paths[i], size)
+        images[:, :, i] = read_images(paths[i], size)
     return images
 
 
@@ -119,7 +120,7 @@ class Database:
     def read_images(self, from_entry, to_entry=None):
         paths = self.entries["filepath"]
         if to_entry is None:
-            return read_image(paths[from_entry], self.size)
+            return read_images(paths[from_entry], self.size)
 
         return read_images(paths[from_entry:to_entry:self.step], self.size)
 
