@@ -4,8 +4,8 @@ import os
 import pandas as pd
 
 
-# Read info for image database entries from CSV file
 def read_image_database(path):
+    """Read info for image database entries from CSV file."""
     df = pd.read_csv(os.path.join(path, "database_entries.csv"))
     df = df.rename(columns=lambda x: x.strip())  # strip whitespace
 
@@ -19,30 +19,63 @@ def read_image_database(path):
 
     return entries
 
-# Returns a greyscale image of type uint8
-def read_image(path):
+def read_image(path, size=()):
+    """Returns a greyscale image of type float."""
     im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+
+    # Convert to normalised matrix of floats
     info = np.iinfo(im.dtype)
-    return im.astype(np.float) / info.max
+    im = im.astype(np.float) / info.max
+
+    return cv2.resize(im, size) if size else im
 
 
-def image_diff(im1, im2):
-    d = cv2.absdiff(im1, im2)
-    return d.mean()
 
+def read_images(paths, size=()):
+    if not paths:
+        return []
+
+    im0 = read_image(paths[0], size)
+    images = np.zeros([im0.shape[0], im0.shape[1], len(paths)], dtype=np.float)
+    images[:, :, 0] = im0
+    for i in range(1, len(paths)):
+        images[:, :, i] = read_image(paths[i], size)
+    return images
+
+
+def mean_absdiff(x, y):
+    """Return mean absolute difference between two images or sets of images
+    (as 3D matrices). """
+
+    # Check that the images are of the same size
+    assert x.shape[0:2] == y.shape[0:2]
+
+    # If the dimensions don't match up then we need to add an extra fake
+    # dimension. Eww.
+    if x.ndim == 2 and y.ndim == 3:
+        x = x[:, :, np.newaxis]
+    elif x.ndim == 3 and y.ndim == 2:
+        y = y[:, :, np.newaxis]
+
+    absdiffs = np.abs(x - y)
+    return absdiffs.mean(axis=(0, 1))
 
 def get_route_idf(images, snap):
-    return [image_diff(im, snap) for im in images]
+    return mean_absdiff(images, snap)
 
 
-def get_ridf(image, snap):
-    diffs = []
-    for _ in range(image.shape[1]):
-        diffs.append(image_diff(image, snap))
-        image = np.roll(image, 1, axis=1)
+def get_ridf(image, snap, step=1):
+    assert step > 0
+
+    nsteps = image.shape[1] // step
+    cols = image.shape[2] if image.ndim == 3 else 1
+    diffs = np.zeros([nsteps, cols], dtype=np.float)
+    for i in range(nsteps):
+        diffs[i, :] = mean_absdiff(image, snap)
+        snap = np.roll(snap, -step, axis=1)
+
     return diffs
 
 
-def get_route_ridf(images, snap):
-    return [min(get_ridf(im, snap)) for im in images]
-
+def get_route_ridf(images, snap, step=1):
+    return np.amin(get_ridf(images, snap, step), axis=0)
