@@ -40,27 +40,29 @@ def read_image_database(path):
     return entries
 
 
-def read_images(paths, size=()):
+def read_images(paths, improc=None):
     """Returns greyscale image(s) of type float."""
 
     # Single string as input
     if isinstance(paths, str):
         im = cv2.imread(paths, cv2.IMREAD_GRAYSCALE)
 
-        # Convert to normalised matrix of floats
-        info = np.iinfo(im.dtype)
-        im = im.astype(np.float) / info.max
+        # NB: Do image processing first as cv2.equalizeHist() requires uint8s
+        if improc:
+            im = improc(im)
 
-        return cv2.resize(im, size) if size else im
+        # Normalise values
+        info = np.iinfo(im.dtype)
+        return im.astype(np.float) / info.max
 
     if not paths:
         return []
 
-    im0 = read_images(paths[0], size)
+    im0 = read_images(paths[0], improc)
     images = np.zeros([im0.shape[0], im0.shape[1], len(paths)], dtype=np.float)
     images[:, :, 0] = im0
     for i in range(1, len(paths)):
-        images[:, :, i] = read_images(paths[i], size)
+        images[:, :, i] = read_images(paths[i], improc)
     return images
 
 
@@ -104,9 +106,8 @@ def get_route_ridf(images, snap, step=1):
 
 
 class Database:
-    def __init__(self, path, size=()):
+    def __init__(self, path):
         self.entries = read_image_database(join('databases', path))
-        self.size = size
 
     def get_distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
@@ -131,22 +132,22 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def read_images(self, entries):
+    def read_images(self, entries, improc=None):
         paths = self.entries["filepath"]
         if not isinstance(entries, Iterable):
-            return read_images(paths[entries], self.size)
+            return read_images(paths[entries], improc)
 
         paths = [paths[entry] for entry in entries]
-        return read_images(paths, self.size)
+        return read_images(paths, improc)
 
-    def plot_idfs(self, ax, ref_entry, max_dist, fr_step=1, ridf_step=1):
+    def plot_idfs(self, ax, ref_entry, max_dist, improc=None, fr_step=1, ridf_step=1):
         (lower, upper) = self.get_entry_bounds(max_dist, ref_entry)
         entries = range(lower, upper+fr_step, fr_step)
         dists = self.get_distances(ref_entry, entries)
 
         # Load snapshot and test images
-        snap = self.read_images(ref_entry)
-        images = self.read_images(entries)
+        snap = self.read_images(ref_entry, improc)
+        images = self.read_images(entries, improc)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, images.shape[2]))
 
@@ -170,11 +171,11 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, fr_step=1, ridf_step=1):
+    def plot_idfs_frames(self, ref_entry, frame_dist, improc=None, fr_step=1, ridf_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
-        snap = self.read_images(ref_entry)
-        images = self.read_images(entries)
+        snap = self.read_images(ref_entry, improc)
+        images = self.read_images(entries, improc)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, images.shape[2]))
 
