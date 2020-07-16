@@ -104,14 +104,19 @@ def get_ridf(image, snap, step=1):
 def get_route_ridf(images, snap, step=1):
     return np.amin(get_ridf(images, snap, step), axis=0)
 
-def plot_route_idf(entries, *diffs):
-    for d in diffs:
-        plt.plot(entries, d)
+def plot_route_idf(entries, *diffs, labels=None):
+    for i in range(len(diffs)):
+        if labels:
+            plt.plot(entries, diffs[i], label=labels[i])
+        else:
+            plt.plot(entries, diffs[i])
     plt.xlabel("Frame")
     plt.xlim(entries[0], entries[-1])
     plt.ylabel("Mean image diff (px)")
     plt.ylim(0, plt.ylim()[1])
 
+    if labels:
+        plt.legend()
 
 class Database:
     def __init__(self, path):
