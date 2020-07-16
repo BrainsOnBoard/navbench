@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import math
 from os import listdir
 from os.path import isfile, join
@@ -25,7 +26,8 @@ def read_image_database(path):
 
         return entries
 
-    df = df.rename(columns=lambda x: x.strip())  # strip whitespace from column headers
+    # strip whitespace from column headers
+    df = df.rename(columns=lambda x: x.strip())
 
     entries = {
         "x": df["X [mm]"] / 1000,
@@ -102,10 +104,9 @@ def get_route_ridf(images, snap, step=1):
 
 
 class Database:
-    def __init__(self, path, size=(), step=1):
+    def __init__(self, path, size=()):
         self.entries = read_image_database(join('databases', path))
         self.size = size
-        self.step = step
 
     def get_distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
@@ -113,11 +114,9 @@ class Database:
         dx = self.entries["x"][j] - self.entries["x"][i]
         return math.hypot(dy, dx)
 
-    def get_distances(self, from_entry, to_entry, ref_entry):
-        assert to_entry >= from_entry
-
+    def get_distances(self, ref_entry, entries):
         dists = []
-        for i in range(from_entry, to_entry, self.step):
+        for i in entries:
             dist = self.get_distance(ref_entry, i)
             dists.append(dist if i >= ref_entry else -dist)
         return dists
@@ -132,26 +131,30 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def read_images(self, from_entry, to_entry=None):
+    def read_images(self, entries):
         paths = self.entries["filepath"]
-        if to_entry is None:
-            return read_images(paths[from_entry], self.size)
+        if not isinstance(entries, Iterable):
+            return read_images(paths[entries], self.size)
 
-        return read_images(paths[from_entry:to_entry:self.step], self.size)
+        paths = [paths[entry] for entry in entries]
+        return read_images(paths, self.size)
 
-    def plot_idfs(self, ax, ref_entry, max_dist, ridf_step=1):
+    def plot_idfs(self, ax, ref_entry, max_dist, fr_step=1, ridf_step=1):
         (lower, upper) = self.get_entry_bounds(max_dist, ref_entry)
-        dists = self.get_distances(lower, upper, ref_entry)
+        entries = range(lower, upper+fr_step, fr_step)
+        dists = self.get_distances(ref_entry, entries)
 
         # Load snapshot and test images
         snap = self.read_images(ref_entry)
-        images = self.read_images(lower, upper)
-        print("Testing frames %i to %i (n=%i)" % (lower, upper, images.shape[2]))
+        images = self.read_images(entries)
+        print("Testing frames %i to %i (n=%i)" %
+              (lower, upper, images.shape[2]))
 
         # Show which part of route we're testing
         x = self.entries["x"]
         y = self.entries["y"]
-        ax[1].plot(x, y, x[lower:upper], y[lower:upper], x[ref_entry], y[ref_entry], 'ro')
+        ax[1].plot(x, y, x[lower:upper], y[lower:upper],
+                   x[ref_entry], y[ref_entry], 'ro')
         ax[1].set_xlabel("x (m)")
         ax[1].set_ylabel("y (m)")
         ax[1].axis("equal")
@@ -167,16 +170,17 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, ridf_step=1):
+    def plot_idfs_frames(self, ref_entry, frame_dist, fr_step=1, ridf_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
+        entries = range(lower, upper+fr_step, fr_step)
         snap = self.read_images(ref_entry)
-        images = self.read_images(lower, upper)
-        print("Testing frames %i to %i (n=%i)" % (lower, upper, images.shape[2]))
+        images = self.read_images(entries)
+        print("Testing frames %i to %i (n=%i)" %
+              (lower, upper, images.shape[2]))
 
         idf_diffs = get_route_idf(images, snap)
         ridf_diffs = get_route_ridf(images, snap, ridf_step)
-        fr_rng = range(lower, upper, self.step)
-        plt.plot(fr_rng, idf_diffs, fr_rng, ridf_diffs)
+        plt.plot(entries, idf_diffs, entries, ridf_diffs)
         plt.xlabel("Frame")
         plt.xlim(lower, upper)
         plt.ylabel("Mean image diff (px)")
