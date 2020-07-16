@@ -166,3 +166,18 @@ class Database:
         ax[0].set_xticks(range(-max_dist, max_dist))
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
+
+    def plot_idfs_frames(self, ref_entry, frame_dist, ridf_step=1):
+        (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
+        snap = self.read_images(ref_entry)
+        images = self.read_images(lower, upper)
+        print("Testing frames %i to %i (n=%i)" % (lower, upper, images.shape[2]))
+
+        idf_diffs = get_route_idf(images, snap)
+        ridf_diffs = get_route_ridf(images, snap, ridf_step)
+        fr_rng = range(lower, upper, self.step)
+        plt.plot(fr_rng, idf_diffs, fr_rng, ridf_diffs)
+        plt.xlabel("Frame")
+        plt.xlim(lower, upper)
+        plt.ylabel("Mean image diff (px)")
+        plt.ylim(0, plt.ylim()[1])
