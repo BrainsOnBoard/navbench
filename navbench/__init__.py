@@ -104,6 +104,14 @@ def get_ridf(image, snap, step=1):
 def get_route_ridf(images, snap, step=1):
     return np.amin(get_ridf(images, snap, step), axis=0)
 
+def plot_route_idf(entries, *diffs):
+    for d in diffs:
+        plt.plot(entries, d)
+    plt.xlabel("Frame")
+    plt.xlim(entries[0], entries[-1])
+    plt.ylabel("Mean image diff (px)")
+    plt.ylim(0, plt.ylim()[1])
+
 
 class Database:
     def __init__(self, path):
@@ -171,18 +179,19 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, improc=None, fr_step=1, ridf_step=1):
+    def get_test_frames(self, ref_entry, frame_dist, improc=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
         snap = self.read_images(ref_entry, improc)
         images = self.read_images(entries, improc)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, images.shape[2]))
+        return (images, snap, entries)
+
+
+    def plot_idfs_frames(self, ref_entry, frame_dist, improc=None, fr_step=1, ridf_step=1):
+        (images, snap, entries) = self.get_test_frames(ref_entry, frame_dist, improc, fr_step)
 
         idf_diffs = get_route_idf(images, snap)
         ridf_diffs = get_route_ridf(images, snap, ridf_step)
-        plt.plot(entries, idf_diffs, entries, ridf_diffs)
-        plt.xlabel("Frame")
-        plt.xlim(lower, upper)
-        plt.ylabel("Mean image diff (px)")
-        plt.ylim(0, plt.ylim()[1])
+        plot_route_idf(entries, idf_diffs, ridf_diffs)
