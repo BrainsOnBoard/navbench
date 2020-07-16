@@ -1,22 +1,38 @@
 import math
-import os
+from os import listdir
+from os.path import isfile, join
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
-    df = pd.read_csv(os.path.join(path, "database_entries.csv"))
-    df = df.rename(columns=lambda x: x.strip())  # strip whitespace
+    try:
+        df = pd.read_csv(join(path, "database_entries.csv"))
+    except FileNotFoundError:
+        print("Warning: No CSV file found for", path)
+
+        # If there's no CSV file then just treat all the files in the folder as
+        # separate entries. Note that the files will be in alphabetical order,
+        # which may not be what you want!
+        entries = {
+            "filepath": [f for f in [join(path, f) for f in listdir(path)] if isfile(f)]
+        }
+        entries["filepath"].sort()
+
+        return entries
+
+    df = df.rename(columns=lambda x: x.strip())  # strip whitespace from column headers
 
     entries = {
         "x": df["X [mm]"] / 1000,
         "y": df["Y [mm]"] / 1000,
         "z": df["Z [mm]"] / 1000,
         "heading": df["Heading [degrees]"],
-        "filepath": [os.path.join(path, fn.strip()) for fn in df["Filename"]]
+        "filepath": [join(path, fn.strip()) for fn in df["Filename"]]
     }
 
     return entries
@@ -87,7 +103,7 @@ def get_route_ridf(images, snap, step=1):
 
 class Database:
     def __init__(self, path, size=(), step=1):
-        self.entries = read_image_database(os.path.join('databases', path))
+        self.entries = read_image_database(join('databases', path))
         self.size = size
         self.step = step
 
