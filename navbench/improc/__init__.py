@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 def histeq(im):
     '''Histogram equalisation: Requires uint8s as input'''
@@ -15,3 +16,8 @@ def chain(*args):
             im = fun(im)
         return im
     return chainedfun
+
+def to_float(im):
+    # Normalise values
+    info = np.iinfo(im.dtype)
+    return im.astype(np.float) / info.max

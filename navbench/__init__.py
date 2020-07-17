@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
     try:
@@ -40,29 +39,27 @@ def read_image_database(path):
     return entries
 
 
-def read_images(paths, improc=None):
+def read_images(paths, preprocess=None):
     """Returns greyscale image(s) of type float."""
 
     # Single string as input
     if isinstance(paths, str):
         im = cv2.imread(paths, cv2.IMREAD_GRAYSCALE)
 
-        # NB: Do image processing first as cv2.equalizeHist() requires uint8s
-        if improc:
-            im = improc(im)
+        # Run preprocessing step on images
+        if preprocess:
+            im = preprocess(im)
 
-        # Normalise values
-        info = np.iinfo(im.dtype)
-        return im.astype(np.float) / info.max
+        return im
 
     if not paths:
         return []
 
-    im0 = read_images(paths[0], improc)
+    im0 = read_images(paths[0], preprocess)
     images = np.zeros([im0.shape[0], im0.shape[1], len(paths)], dtype=np.float)
     images[:, :, 0] = im0
     for i in range(1, len(paths)):
-        images[:, :, i] = read_images(paths[i], improc)
+        images[:, :, i] = read_images(paths[i], preprocess)
     return images
 
 
@@ -72,6 +69,9 @@ def mean_absdiff(x, y):
 
     # Check that the images are of the same size
     assert x.shape[0:2] == y.shape[0:2]
+
+    # Must be floats (0 <= x <= 1)
+    assert x.dtype == np.float and y.dtype == np.float
 
     # If the dimensions don't match up then we need to add an extra fake
     # dimension. Eww.
@@ -145,22 +145,28 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def read_images(self, entries, improc=None):
+    def read_images(self, entries, preprocess=None):
+        # Convert all the images to floats before we use them
+        if preprocess is None:
+            preprocess = improc.to_float
+        else:
+            preprocess = improc.chain(preprocess, improc.to_float)
+
         paths = self.entries["filepath"]
         if not isinstance(entries, Iterable):
-            return read_images(paths[entries], improc)
+            return read_images(paths[entries], preprocess)
 
         paths = [paths[entry] for entry in entries]
-        return read_images(paths, improc)
+        return read_images(paths, preprocess)
 
-    def plot_idfs(self, ax, ref_entry, max_dist, improc=None, fr_step=1, ridf_step=1):
+    def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1):
         (lower, upper) = self.get_entry_bounds(max_dist, ref_entry)
         entries = range(lower, upper+fr_step, fr_step)
         dists = self.get_distances(ref_entry, entries)
 
         # Load snapshot and test images
-        snap = self.read_images(ref_entry, improc)
-        images = self.read_images(entries, improc)
+        snap = self.read_images(ref_entry, preprocess)
+        images = self.read_images(entries, preprocess)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, images.shape[2]))
 
@@ -184,18 +190,18 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def get_test_frames(self, ref_entry, frame_dist, improc=None, fr_step=1):
+    def get_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
-        snap = self.read_images(ref_entry, improc)
-        images = self.read_images(entries, improc)
+        snap = self.read_images(ref_entry, preprocess)
+        images = self.read_images(entries, preprocess)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, images.shape[2]))
         return (images, snap, entries)
 
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, improc=None, fr_step=1, ridf_step=1):
-        (images, snap, entries) = self.get_test_frames(ref_entry, frame_dist, improc, fr_step)
+    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1):
+        (images, snap, entries) = self.get_test_frames(ref_entry, frame_dist, preprocess, fr_step)
 
         idf_diffs = get_route_idf(images, snap)
         ridf_diffs = get_route_ridf(images, snap, ridf_step)
