@@ -1,2 +1,2 @@
 #!/bin/sh
-python -m pytest -q tests
+python -m pytest -q navbench/test
