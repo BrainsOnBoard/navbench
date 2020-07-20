@@ -1,5 +1,5 @@
-from navbench import get_idf_ca
 import pytest
+from navbench import get_idf_ca
 
 def test_typical():
     assert get_idf_ca([1, 2, 0, 2, 3, 1]) == 3

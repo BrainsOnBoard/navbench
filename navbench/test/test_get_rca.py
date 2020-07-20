@@ -1,5 +1,5 @@
-from navbench import get_rca
 import pytest
+from navbench import get_rca
 
 def test_empty():
     assert get_rca([]) == 0
