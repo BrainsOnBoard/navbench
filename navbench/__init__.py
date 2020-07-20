@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
     try:
@@ -101,8 +102,39 @@ def get_ridf(image, snap, step=1):
     return diffs
 
 
+def get_idf_ca(idf):
+    '''
+    Get catchment area for 1D IDF.
+
+    Differences from Andy's implementation:
+        - I'm treating IDFs like this: [1, 2, 0, 2, 1] as having a CA of 2
+          rather than 0.
+        - IDFs which keep extending indefinitely to the left or right currently
+          cause a ValueError to be thrown
+    '''
+    if not idf:
+        return 0
+
+    goal = idf.index(min(idf))
+
+    d_left = np.diff(idf[goal::-1])
+    d_right = np.diff(idf[goal:])
+
+    def get_ca(vec):
+        if vec.size:
+            return next(i for i in range(len(vec)) if vec[i] < 0)
+        else:  # Empty array
+            return 0
+
+    try:
+        return get_ca(d_left) + get_ca(d_right)
+    except StopIteration:
+        raise ValueError('IDF does not decrease at any point')
+
+
 def get_route_ridf(images, snap, step=1):
     return np.amin(get_ridf(images, snap, step), axis=0)
+
 
 def plot_route_idf(entries, *diffs, labels=None):
     for i in range(len(diffs)):
@@ -117,6 +149,7 @@ def plot_route_idf(entries, *diffs, labels=None):
 
     if labels:
         plt.legend()
+
 
 class Database:
     def __init__(self, path):
