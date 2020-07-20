@@ -7,6 +7,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.signal import medfilt
 
 
 def read_image_database(path):
@@ -102,7 +103,7 @@ def get_ridf(image, snap, step=1):
     return diffs
 
 
-def __get_ca_twoway(vals, filter_fun, thresh_fun):
+def __get_ca_twoway(vals, filter_fun, thresh_fun, filter_size):
     if not vals:
         return 0
 
@@ -112,9 +113,23 @@ def __get_ca_twoway(vals, filter_fun, thresh_fun):
     # Assume goal is where minimum is
     goal = np.argmin(vals)
 
+    def filter_vals(vec):
+        vec = filter_fun(vec)
+
+        # Median filtering doesn't make sense in this case
+        if not vec.size:
+            return np.empty(0)
+
+        # This is invalid -- give error rather than spurious return values
+        if len(vec) < filter_size:
+            raise ValueError('Filter size is greater than vector length')
+
+        return medfilt(vec, filter_size)
+
+
     # Apply filter to values from left and right of goal
-    left = filter_fun(vals[goal::-1])
-    right = filter_fun(vals[goal:])
+    left = filter_vals(vals[goal::-1])
+    right = filter_vals(vals[goal:])
 
     def get_ca(vec):
         if not vec.size:  # Empty array
@@ -125,7 +140,7 @@ def __get_ca_twoway(vals, filter_fun, thresh_fun):
     return get_ca(left) + get_ca(right)
 
 
-def get_idf_ca(idf):
+def get_idf_ca(idf, filter_size=1):
     '''
     Get catchment area for 1D IDF.
 
@@ -136,7 +151,7 @@ def get_idf_ca(idf):
           cause a ValueError to be thrown
     '''
     try:
-        return __get_ca_twoway(idf, np.diff, lambda x: x < 0)
+        return __get_ca_twoway(idf, np.diff, lambda x: x < 0, filter_size)
     except StopIteration:
         raise ValueError('IDF does not decrease at any point')
 
@@ -151,7 +166,7 @@ def get_rca(errs, thresh=45):
     errs = [abs(x) for x in errs]
 
     try:
-        return __get_ca_twoway(errs, lambda x: x[1:], lambda th: th >= thresh)
+        return __get_ca_twoway(errs, lambda x: x[1:], lambda th: th >= thresh, 1)
     except StopIteration:
         raise ValueError('No angular errors => threshold')
 
