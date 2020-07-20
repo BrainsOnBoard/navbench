@@ -1,24 +1,24 @@
 import numpy as np
 from scipy.signal import medfilt
 
-def __get_ca_twoway(vals, filter_fun, thresh_fun, filter_size):
+
+def __get_ca_bounds(vals, process_fun, thresh_fun, filter_size):
     '''
-    Internal function. Get total CA in leftward and rightward direction from
-    goal position (taken as where the minimum value of vals is).
+    Internal function. Get CA in leftward and rightward directions from goal
+    position (taken as where the minimum value of vals is).
     '''
 
-    # Must be numpy array
+    # Convert to numpy array
     vals = np.array(vals)
 
-    # If vals is empty
-    if not vals.size:
-        return 0
+    if vals.ndim != 1 or len(vals) == 0:
+        raise ValueError('Input values must be vector')
 
     # Assume goal is where minimum is
     goal = np.argmin(vals)
 
     def filter_vals(vec):
-        vec = filter_fun(vec)
+        vec = process_fun(vec)
 
         # Median filtering doesn't make sense in this case
         if not vec.size:
@@ -40,27 +40,45 @@ def __get_ca_twoway(vals, filter_fun, thresh_fun, filter_size):
 
         return next(i for i, val in enumerate(vec) if thresh_fun(val))
 
-    return get_ca(left) + get_ca(right)
+    # A StopIteration error is raised when there are no values for which
+    # thresh_fun() == True. In this case the CA extends beyond the lower or
+    # upper bounds of the input values and we indicate it by setting the bound
+    # to None.
+    try:
+        lower = goal - get_ca(left)
+    except StopIteration:
+        lower = None
+    try:
+        upper = goal + get_ca(right)
+    except StopIteration:
+        upper = None
+
+    return (lower, upper), goal
 
 
-def get_idf_ca(idf, filter_size=1):
+def __get_total_ca(bounds):
+    assert len(bounds) == 2
+    return bounds[1] - bounds[0]
+
+
+def get_idf_ca_bounds(idf, filter_size=1):
     '''
     Get catchment area for 1D IDF.
 
     Differences from Andy's implementation:
         - I'm treating IDFs like this: [1, 2, 0, 2, 1] as having a CA of 2
           rather than 0.
-        - IDFs which keep extending indefinitely to the left or right currently
-          cause a ValueError to be thrown
-        - Cases where vector length > filter size also cause an error
+        - Cases where vector length > filter size cause an error
     '''
-    try:
-        return __get_ca_twoway(idf, np.diff, lambda x: x < 0, filter_size)
-    except StopIteration:
-        raise ValueError('IDF does not decrease at any point')
+    return __get_ca_bounds(idf, np.diff, lambda x: x < 0, filter_size)
 
 
-def get_rca(errs, thresh=45, filter_size=1):
+def get_idf_ca(idf, filter_size=1):
+    bounds, _ = get_idf_ca_bounds(idf, filter_size)
+    return __get_total_ca(bounds)
+
+
+def get_rca_bounds(errs, thresh=45, filter_size=1):
     '''
     Get rotational catchment area:
         i.e., area over which abs(errs) < some_threshold
@@ -74,6 +92,11 @@ def get_rca(errs, thresh=45, filter_size=1):
     errs = [abs(x) for x in errs]
 
     try:
-        return __get_ca_twoway(errs, lambda x: x[1:], lambda th: th >= thresh, filter_size)
+        return __get_ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh, filter_size)
     except StopIteration:
         raise ValueError('No angular errors => threshold')
+
+
+def get_rca(errs, thresh=45, filter_size=1):
+    bounds, _ = get_rca_bounds(errs, thresh, filter_size)
+    return __get_total_ca(bounds)
