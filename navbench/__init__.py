@@ -126,7 +126,6 @@ def __get_ca_twoway(vals, filter_fun, thresh_fun, filter_size):
 
         return medfilt(vec, filter_size)
 
-
     # Apply filter to values from left and right of goal
     left = filter_vals(vals[goal::-1])
     right = filter_vals(vals[goal:])
@@ -149,6 +148,7 @@ def get_idf_ca(idf, filter_size=1):
           rather than 0.
         - IDFs which keep extending indefinitely to the left or right currently
           cause a ValueError to be thrown
+        - Cases where vector length > filter size also cause an error
     '''
     try:
         return __get_ca_twoway(idf, np.diff, lambda x: x < 0, filter_size)
@@ -156,9 +156,13 @@ def get_idf_ca(idf, filter_size=1):
         raise ValueError('IDF does not decrease at any point')
 
 
-def get_rca(errs, thresh=45):
+def get_rca(errs, thresh=45, filter_size=1):
     '''
-    Get rotational catchment area: i.e., area over which abs(errs) < some_threshold
+    Get rotational catchment area:
+        i.e., area over which abs(errs) < some_threshold
+
+    Differences from Andy's implementation:
+        - filter_size defaults to 1, not 3
     '''
     assert thresh >= 0
 
@@ -166,7 +170,7 @@ def get_rca(errs, thresh=45):
     errs = [abs(x) for x in errs]
 
     try:
-        return __get_ca_twoway(errs, lambda x: x[1:], lambda th: th >= thresh, 1)
+        return __get_ca_twoway(errs, lambda x: x[1:], lambda th: th >= thresh, filter_size)
     except StopIteration:
         raise ValueError('No angular errors => threshold')
 
@@ -271,9 +275,9 @@ class Database:
               (lower, upper, images.shape[2]))
         return (images, snap, entries)
 
-
     def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1):
-        (images, snap, entries) = self.get_test_frames(ref_entry, frame_dist, preprocess, fr_step)
+        (images, snap, entries) = self.get_test_frames(
+            ref_entry, frame_dist, preprocess, fr_step)
 
         idf_diffs = get_route_idf(images, snap)
         ridf_diffs = get_route_ridf(images, snap, ridf_step)
