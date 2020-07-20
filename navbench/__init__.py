@@ -102,6 +102,29 @@ def get_ridf(image, snap, step=1):
     return diffs
 
 
+def __get_ca_twoway(vals, filter_fun, thresh_fun):
+    if not vals:
+        return 0
+
+    # Must be numpy array
+    vals = np.array(vals)
+
+    # Assume goal is where minimum is
+    goal = np.argmin(vals)
+
+    # Apply filter to values from left and right of goal
+    left = filter_fun(vals[goal::-1])
+    right = filter_fun(vals[goal:])
+
+    def get_ca(vec):
+        if not vec.size:  # Empty array
+            return 0
+
+        return next(i for i, val in enumerate(vec) if thresh_fun(val))
+
+    return get_ca(left) + get_ca(right)
+
+
 def get_idf_ca(idf):
     '''
     Get catchment area for 1D IDF.
@@ -112,24 +135,25 @@ def get_idf_ca(idf):
         - IDFs which keep extending indefinitely to the left or right currently
           cause a ValueError to be thrown
     '''
-    if not idf:
-        return 0
-
-    goal = idf.index(min(idf))
-
-    d_left = np.diff(idf[goal::-1])
-    d_right = np.diff(idf[goal:])
-
-    def get_ca(vec):
-        if vec.size:
-            return next(i for i in range(len(vec)) if vec[i] < 0)
-        else:  # Empty array
-            return 0
-
     try:
-        return get_ca(d_left) + get_ca(d_right)
+        return __get_ca_twoway(idf, np.diff, lambda x: x < 0)
     except StopIteration:
         raise ValueError('IDF does not decrease at any point')
+
+
+def get_rca(errs, thresh=45):
+    '''
+    Get rotational catchment area: i.e., area over which abs(errs) < some_threshold
+    '''
+    assert thresh >= 0
+
+    # Angular errors must be absolute
+    errs = [abs(x) for x in errs]
+
+    try:
+        return __get_ca_twoway(errs, lambda x: x[1:], lambda th: th >= thresh)
+    except StopIteration:
+        raise ValueError('No angular errors => threshold')
 
 
 def get_route_ridf(images, snap, step=1):
