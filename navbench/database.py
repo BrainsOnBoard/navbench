@@ -6,8 +6,10 @@ import navbench as nb
 from navbench import improc
 
 class Database:
-    def __init__(self, path):
-        self.entries = nb.read_image_database(os.path.join('databases', path))
+    def __init__(self, path, fullpath=False):
+        if not fullpath:
+            path = os.path.join('databases', path)
+        self.entries = nb.read_image_database(path)
 
     def get_distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
