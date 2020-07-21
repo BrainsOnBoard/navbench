@@ -7,6 +7,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from .ca import *
 
 
@@ -101,9 +102,6 @@ def get_ridf(image, snap, step=1):
         snap = np.roll(snap, -step, axis=1)
 
     return diffs
-
-
-
 
 
 def get_route_ridf(images, snap, step=1):

@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import medfilt
 
@@ -100,3 +101,23 @@ def get_rca_bounds(errs, thresh=45, filter_size=1):
 def get_rca(errs, thresh=45, filter_size=1):
     bounds, _ = get_rca_bounds(errs, thresh, filter_size)
     return __get_total_ca(bounds)
+
+
+def plot_ca(entries, vals, bounds, goal, filter_zeros=True, ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    # if filter_zeros:
+    #     zero_idx = [i for i, val in enumerate(vals) if val == 0]
+    #     vals[zero_idx] = None
+    #     print('Warning: %i zero values (perfect matches?) are not being shown' %
+    #           len(zero_idx))
+
+    ax.plot(entries, vals)
+    ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
+    ax.set_xlim(entries[0], entries[-1])
+    ax.set_ylim(bottom=0)
+    ax.plot([entries[goal], entries[goal]], ax.get_ylim(), 'k--')
+
+    return ax
