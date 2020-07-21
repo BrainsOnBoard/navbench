@@ -5,11 +5,15 @@ from collections.abc import Iterable
 import navbench as nb
 from navbench import improc
 
+
 class Database:
     def __init__(self, path, fullpath=False):
         if not fullpath:
             path = os.path.join('databases', path)
         self.entries = nb.read_image_database(path)
+
+    def __len__(self):
+        return len(self.entries["filepath"])
 
     def get_distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
