@@ -3,7 +3,7 @@ import numpy as np
 from scipy.signal import medfilt
 
 
-def __get_ca_bounds(vals, process_fun, thresh_fun, filter_size):
+def __get_ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
     '''
     Internal function. Get CA in leftward and rightward directions from goal
     position (taken as where the minimum value of vals is).
@@ -15,8 +15,9 @@ def __get_ca_bounds(vals, process_fun, thresh_fun, filter_size):
     if vals.ndim != 1 or len(vals) == 0:
         raise ValueError('Input values must be vector')
 
-    # Assume goal is where minimum is
-    goal = np.argmin(vals)
+    if goal_idx is None:
+        # Assume goal is where minimum is
+        goal_idx = np.argmin(vals)
 
     def filter_vals(vec):
         vec = process_fun(vec)
@@ -32,8 +33,8 @@ def __get_ca_bounds(vals, process_fun, thresh_fun, filter_size):
         return medfilt(vec, filter_size)
 
     # Apply filter to values from left and right of goal
-    left = filter_vals(vals[goal::-1])
-    right = filter_vals(vals[goal:])
+    left = filter_vals(vals[goal_idx::-1])
+    right = filter_vals(vals[goal_idx:])
 
     def get_ca(vec):
         if not vec.size:  # Empty array
@@ -46,15 +47,15 @@ def __get_ca_bounds(vals, process_fun, thresh_fun, filter_size):
     # upper bounds of the input values and we indicate it by setting the bound
     # to None.
     try:
-        lower = goal - get_ca(left)
+        lower = goal_idx - get_ca(left)
     except StopIteration:
         lower = None
     try:
-        upper = goal + get_ca(right)
+        upper = goal_idx + get_ca(right)
     except StopIteration:
         upper = None
 
-    return (lower, upper), goal
+    return (lower, upper), goal_idx
 
 
 def __get_total_ca(bounds):
@@ -62,7 +63,7 @@ def __get_total_ca(bounds):
     return bounds[1] - bounds[0]
 
 
-def get_idf_ca_bounds(idf, filter_size=1):
+def get_idf_ca_bounds(idf, goal_idx=None, filter_size=1):
     '''
     Get catchment area for 1D IDF.
 
@@ -71,15 +72,15 @@ def get_idf_ca_bounds(idf, filter_size=1):
           rather than 0.
         - Cases where vector length > filter size cause an error
     '''
-    return __get_ca_bounds(idf, np.diff, lambda x: x < 0, filter_size)
+    return __get_ca_bounds(idf, np.diff, lambda x: x < 0, goal_idx, filter_size)
 
 
-def get_idf_ca(idf, filter_size=1):
-    bounds, _ = get_idf_ca_bounds(idf, filter_size)
+def get_idf_ca(idf, goal_idx=None, filter_size=1):
+    bounds, _ = get_idf_ca_bounds(idf, goal_idx, filter_size)
     return __get_total_ca(bounds)
 
 
-def get_rca_bounds(errs, thresh=45, filter_size=1):
+def get_rca_bounds(errs, thresh=45, goal_idx=None, filter_size=1):
     '''
     Get rotational catchment area:
         i.e., area over which abs(errs) < some_threshold
@@ -92,18 +93,16 @@ def get_rca_bounds(errs, thresh=45, filter_size=1):
     # Angular errors must be absolute
     errs = [abs(x) for x in errs]
 
-    try:
-        return __get_ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh, filter_size)
-    except StopIteration:
-        raise ValueError('No angular errors => threshold')
+    return __get_ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh,
+                           goal_idx, filter_size)
 
 
-def get_rca(errs, thresh=45, filter_size=1):
-    bounds, _ = get_rca_bounds(errs, thresh, filter_size)
+def get_rca(errs, thresh=45, goal_idx=None, filter_size=1):
+    bounds, _ = get_rca_bounds(errs, thresh, goal_idx, filter_size)
     return __get_total_ca(bounds)
 
 
-def plot_ca(entries, vals, bounds, goal, filter_zeros=True, ax=None):
+def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=True, ax=None):
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -117,6 +116,6 @@ def plot_ca(entries, vals, bounds, goal, filter_zeros=True, ax=None):
     ax.plot(entries, vals)
     ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
     ax.set_xlim(entries[0], entries[-1])
-    ax.plot([entries[goal], entries[goal]], ax.get_ylim(), 'k--')
+    ax.plot([entries[goal_idx], entries[goal_idx]], ax.get_ylim(), 'k--')
 
     return ax
