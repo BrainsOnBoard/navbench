@@ -57,7 +57,7 @@ class RIDFViewer(nb.Database):
 
     def show_frame(self):
         image = self.images[:, :, int(self.frame - self.bounds[0])]
-        ridf = nb.get_ridf(image, self.snap)
+        ridf = nb.ridf(image, self.snap)
 
         if self.axes_image is None:
             self.axes_image = self.ax_imshow.imshow(image, cmap='gray')

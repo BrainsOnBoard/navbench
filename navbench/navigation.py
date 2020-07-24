@@ -23,21 +23,22 @@ def mean_absdiff(x, y):
     return absdiffs.mean(axis=(0, 1))
 
 
-def get_route_idf(images, snap):
-    return mean_absdiff(images, snap)
-
-
-def get_ridf(image, snap, step=1):
+def ridf(images, snap, step=1):
     assert step > 0
+    assert step % 1 == 0
 
-    nsteps = image.shape[1] // step
-    cols = image.shape[2] if image.ndim == 3 else 1
-    diffs = np.zeros([nsteps, cols], dtype=np.float)
+    nsteps = images.shape[-2] // step
+    nim = images.shape[-1] if images.ndim == 3 else 1
+    diffs = np.zeros((nsteps, nim), dtype=np.float)
     for i in range(nsteps):
-        diffs[i, :] = mean_absdiff(image, snap)
+        diffs[i, :] = mean_absdiff(images, snap)
         snap = np.roll(snap, -step, axis=1)
 
     return diffs
+
+
+def get_route_idf(images, snap):
+    return mean_absdiff(images, snap)
 
 
 def normalise180(ths):
@@ -54,11 +55,11 @@ def ridf_to_degrees(diffs):
 
 
 def get_route_ridf(images, snap, step=1):
-    return np.amin(get_ridf(images, snap, step), axis=0)
+    return np.amin(ridf(images, snap, step), axis=0)
 
 
 def get_route_ridf_headings(images, snap, step=1):
-    diffs = get_ridf(images, snap, step)
+    diffs = ridf(images, snap, step)
     return ridf_to_degrees(diffs)
 
 
