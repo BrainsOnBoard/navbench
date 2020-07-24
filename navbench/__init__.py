@@ -103,8 +103,26 @@ def get_ridf(image, snap, step=1):
     return diffs
 
 
+def normalise180(ths):
+    for idx, th in enumerate(ths):
+        if th > 180:
+            ths[idx] -= 360
+    return ths
+
+
+def ridf_to_degrees(diffs):
+    bestcols = np.argmin(diffs, axis=0)
+    ths = 360 * bestcols / diffs.shape[0]
+    return normalise180(ths)
+
+
 def get_route_ridf(images, snap, step=1):
     return np.amin(get_ridf(images, snap, step), axis=0)
+
+
+def get_route_ridf_headings(images, snap, step=1):
+    diffs = get_ridf(images, snap, step)
+    return ridf_to_degrees(diffs)
 
 
 def plot_route_idf(entries, *diffs, labels=None):

@@ -117,7 +117,6 @@ def plot_ca(entries, vals, bounds, goal, filter_zeros=True, ax=None):
     ax.plot(entries, vals)
     ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
     ax.set_xlim(entries[0], entries[-1])
-    ax.set_ylim(bottom=0)
     ax.plot([entries[goal], entries[goal]], ax.get_ylim(), 'k--')
 
     return ax
