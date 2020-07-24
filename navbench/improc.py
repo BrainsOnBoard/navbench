@@ -30,10 +30,23 @@ def to_float(im):
 def fill_holes(im):
     '''Fills in any black objects'''
     assert im.dtype == np.uint8
-    contours, _ = cv2.findContours(im, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
+    # Find polygons
+    contours, _ = cv2.findContours(im, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return
+
+    # Find the biggest polygon...
+    biggest_idx = np.argmax([cv2.contourArea(cnt) for cnt in contours])
+
+    #...drop it from list and colour it white
+    biggest_cnt = contours.pop(biggest_idx)
+    cv2.drawContours(im, [biggest_cnt], 0, 255, -1)
+
+    # Colour remaining polygons black
     for cnt in contours:
-        cv2.drawContours(im, [cnt], 0, 255, -1)
+        cv2.drawContours(im, [cnt], 0, 0, -1)
+
     return im
 
 

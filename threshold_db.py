@@ -5,8 +5,6 @@ import navbench as nb
 from navbench import improc as ip
 
 for i in range(0, 1000, 100):
-    # Works really well on this dataset, but leaves some clouds in with the
-    # Newton dataset :-(
     path = "databases/bottom_of_campus/straight_route2_fwd/frame%05i.jpg" % i
     print(path)
 
