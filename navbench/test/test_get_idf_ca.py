@@ -4,24 +4,29 @@ from navbench.ca import *
 
 def test_typical():
     idf = [1, 2, 0, 2, 3, 1]
-    bounds, goal = get_idf_ca_bounds(idf)
-    assert goal == 2
+    bounds, goal_idx = get_idf_ca_bounds(idf)
+    assert goal_idx == 2
     assert bounds == (1, 4)
     assert get_idf_ca(idf) == 3
+
+def test_explicit_goal():
+    idf = [1, 2, 0, 2, 3, 1]
+    bounds, _ = get_idf_ca_bounds(idf, 2)
+    assert bounds == (1, 4)
 
 
 def test_no_left():
     idf = [0, 2, 1]
-    bounds, goal = get_idf_ca_bounds(idf)
-    assert goal == 0
+    bounds, goal_idx = get_idf_ca_bounds(idf)
+    assert goal_idx == 0
     assert bounds == (0, 1)
     assert get_idf_ca(idf) == 1
 
 
 def test_no_right():
     idf = [1, 2, 0]
-    bounds, goal = get_idf_ca_bounds(idf)
-    assert goal == 2
+    bounds, goal_idx = get_idf_ca_bounds(idf)
+    assert goal_idx == 2
     assert bounds == (1, 2)
     assert get_idf_ca(idf) == 1
 
@@ -37,15 +42,15 @@ def test_single():
 
 def test_infinite_left():
     idf = [1, 1, 0, 2, 1]
-    bounds, goal = get_idf_ca_bounds(idf)
-    assert goal == 2
+    bounds, goal_idx = get_idf_ca_bounds(idf)
+    assert goal_idx == 2
     assert bounds == (None, 3)
 
 
 def test_infinite_right():
     idf = [1, 2, 0, 1, 1]
-    bounds, goal = get_idf_ca_bounds(idf)
-    assert goal == 2
+    bounds, goal_idx = get_idf_ca_bounds(idf)
+    assert goal_idx == 2
     assert bounds == (1, None)
 
 
