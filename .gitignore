@@ -4,4 +4,5 @@
 # Jupyter Notebook
 .ipynb_checkpoints
 
+.coverage
 .ropeproject
