@@ -120,3 +120,21 @@ def plot_route_idf(entries, *diffs, labels=None):
 
     if labels:
         plt.legend()
+
+
+def plot_ridf(diffs, ax=None):
+    # We want the plot to go from -180° to 180°, so we wrap around
+    diffs = np.append(diffs, diffs[0])
+    diffs = np.roll(diffs, round(len(diffs) / 2))
+
+    if ax is None:
+        _, ax = plt.subplots()
+    else:
+        ax.clear()
+
+    xs = np.linspace(-180, 180, len(diffs))
+    ax.plot(xs, diffs)
+    ax.set_xlim(-180, 180)
+    ax.set_xticks(range(-180, 181, 45))
+
+    return ax
