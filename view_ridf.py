@@ -39,7 +39,7 @@ class RIDFViewer(nb.Database):
         entries = range(*self.bounds)
         self.images = self.read_images(entries, resize)
         self.snap = self.read_images(goal, resize)
-        print(self.images.shape[2], 'images loaded')
+        print(len(self.images), 'images loaded')
 
         errs = nb.get_route_ridf_headings(self.images, self.snap)
         ca_bounds, goal2 = nb.get_rca_bounds(errs)
@@ -56,7 +56,7 @@ class RIDFViewer(nb.Database):
             self.show_frame()
 
     def show_frame(self):
-        image = self.images[:, :, int(self.frame - self.bounds[0])]
+        image = self.images[int(self.frame - self.bounds[0])]
         ridf = nb.ridf(image, self.snap)
 
         if self.axes_image is None:

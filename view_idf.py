@@ -40,7 +40,7 @@ class IDFViewer(nb.Database):
         entries = range(*self.bounds)
         self.images = self.read_images(entries, resize)
         self.snap = self.read_images(goal, resize)
-        print(self.images.shape[2], 'images loaded')
+        print(len(self.images), 'images loaded')
 
         idf = nb.get_route_idf(self.images, self.snap)
         ca_bounds, goal2 = nb.get_idf_ca_bounds(idf)
@@ -60,7 +60,7 @@ class IDFViewer(nb.Database):
             self.show_frame()
 
     def show_frame(self):
-        image = self.images[:, :, self.frame - self.bounds[0]]
+        image = self.images[int(self.frame - self.bounds[0])]
         diffim = cv2.subtract(self.snap, image)
         diffim = (diffim + 1) / 2
 

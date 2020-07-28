@@ -5,8 +5,7 @@ im0 = np.zeros((2, 2))
 im1 = np.ones((2, 2))
 
 arr0 = np.zeros((2, 2, 2))
-arr1 = arr0.copy()
-arr1[:, :, 1] = 1
+arr1 = [im0, im1]
 
 
 def test_identity():

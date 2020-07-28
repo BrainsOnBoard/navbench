@@ -56,15 +56,7 @@ def read_images(paths, preprocess=None):
 
         return im
 
-    if not paths:
-        return []
-
-    im0 = read_images(paths[0], preprocess)
-    images = np.zeros([im0.shape[0], im0.shape[1], len(paths)], dtype=np.float)
-    images[:, :, 0] = im0
-    for i in range(1, len(paths)):
-        images[:, :, i] = read_images(paths[i], preprocess)
-    return images
+    return [read_images(path, preprocess) for path in paths]
 
 
 class Database:
@@ -122,7 +114,7 @@ class Database:
         snap = self.read_images(ref_entry, preprocess)
         images = self.read_images(entries, preprocess)
         print("Testing frames %i to %i (n=%i)" %
-              (lower, upper, images.shape[2]))
+              (lower, upper, len(images)))
 
         # Show which part of route we're testing
         x = self.entries["x"]
@@ -150,7 +142,7 @@ class Database:
         snap = self.read_images(ref_entry, preprocess)
         images = self.read_images(entries, preprocess)
         print("Testing frames %i to %i (n=%i)" %
-              (lower, upper, images.shape[2]))
+              (lower, upper, len(images)))
         return (images, snap, entries)
 
     def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1):

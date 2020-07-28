@@ -2,39 +2,42 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def to_3d_array(images):
+    images = np.asarray(images)
+
+    if images.ndim == 3:
+        return images
+    if images.ndim == 2:
+        return images[np.newaxis, :, :]
+    raise ValueError("images must be a 2d or 3d array")
+
+
 def mean_absdiff(x, y):
     """Return mean absolute difference between two images or sets of images
     (as 3D matrices). """
+    x = to_3d_array(x).astype(np.float)
+    y = to_3d_array(y).astype(np.float)
 
     # Check that the images are of the same size
-    assert x.shape[0:2] == y.shape[0:2]
-
-    # Must be floats (0 <= x <= 1)
-    assert x.dtype == np.float and y.dtype == np.float
-
-    # If the dimensions don't match up then we need to add an extra fake
-    # dimension. Eww.
-    if x.ndim == 2 and y.ndim == 3:
-        x = x[:, :, np.newaxis]
-    elif x.ndim == 3 and y.ndim == 2:
-        y = y[:, :, np.newaxis]
+    assert x.shape[1:] == y.shape[1:]
 
     absdiffs = np.abs(x - y)
-    return absdiffs.mean(axis=(0, 1))
+    return absdiffs.mean(axis=(1, 2))
 
 
 def ridf(images, snap, step=1):
     assert step > 0
     assert step % 1 == 0
+    images = to_3d_array(images)
+    snap = to_3d_array(snap)
 
-    nsteps = images.shape[-2] // step
-    nim = images.shape[-1] if images.ndim == 3 else 1
-    diffs = np.zeros((nsteps, nim), dtype=np.float)
-    for i in range(nsteps):
-        diffs[i, :] = mean_absdiff(images, snap)
-        snap = np.roll(snap, -step, axis=1)
+    steps = range(0, images.shape[2], step)
+    diffs = np.empty((len(images), len(steps)), dtype=np.float)
+    for i, rot in enumerate(steps):
+        rsnap = np.roll(snap, -rot, axis=2)
+        diffs[:, i] = mean_absdiff(images, rsnap)
 
-    return diffs
+    return diffs if diffs.shape[0] > 1 else diffs[0]
 
 
 def get_route_idf(images, snap):
@@ -49,13 +52,13 @@ def normalise180(ths):
 
 
 def ridf_to_degrees(diffs):
-    bestcols = np.argmin(diffs, axis=0)
-    ths = 360 * bestcols / diffs.shape[0]
+    bestcols = np.argmin(diffs, axis=1)
+    ths = 360 * bestcols / diffs.shape[1]
     return normalise180(ths)
 
 
 def get_route_ridf(images, snap, step=1):
-    return np.amin(ridf(images, snap, step), axis=0)
+    return np.amin(ridf(images, snap, step), axis=1)
 
 
 def get_route_ridf_headings(images, snap, step=1):
@@ -64,11 +67,11 @@ def get_route_ridf_headings(images, snap, step=1):
 
 
 def plot_route_idf(entries, *diffs, labels=None):
-    for i in range(len(diffs)):
+    for diff, label in zip(diffs, labels):
         if labels:
-            plt.plot(entries, diffs[i], label=labels[i])
+            plt.plot(entries, diff, label=label)
         else:
-            plt.plot(entries, diffs[i])
+            plt.plot(entries, diff)
     plt.xlabel("Frame")
     plt.xlim(entries[0], entries[-1])
     plt.ylabel("Mean image diff (px)")
@@ -79,9 +82,11 @@ def plot_route_idf(entries, *diffs, labels=None):
 
 
 def plot_ridf(diffs, ax=None):
+    assert diffs.ndim == 1
+
     # We want the plot to go from -180° to 180°, so we wrap around
-    diffs = np.append(diffs, diffs[0])
     diffs = np.roll(diffs, round(len(diffs) / 2))
+    diffs = np.append(diffs, diffs[0])
 
     if ax is None:
         _, ax = plt.subplots()
@@ -91,6 +96,7 @@ def plot_ridf(diffs, ax=None):
     xs = np.linspace(-180, 180, len(diffs))
     ax.plot(xs, diffs)
     ax.set_xlim(-180, 180)
+    ax.set_ylim(bottom=0)
     ax.set_xticks(range(-180, 181, 45))
 
     return ax
