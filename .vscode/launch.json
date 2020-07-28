@@ -10,6 +10,14 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "view_ridf.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/view_ridf.py",
+            "console": "integratedTerminal",
+            "args": ["${workspaceFolder}/databases/newton/route1"]
         }
     ]
 }
