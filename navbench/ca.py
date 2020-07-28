@@ -104,8 +104,7 @@ def get_rca(errs, thresh=45, goal_idx=None, filter_size=1):
 
 def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=True, ax=None):
     if ax is None:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        _, ax = plt.subplots()
 
     # if filter_zeros:
     #     zero_idx = [i for i, val in enumerate(vals) if val == 0]
@@ -115,7 +114,8 @@ def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=True, ax=None):
 
     ax.plot(entries, vals)
     ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
-    ax.set_xlim(entries[0], entries[-1])
     ax.plot([entries[goal_idx], entries[goal_idx]], ax.get_ylim(), 'k--')
+    ax.set_xlim(entries[0], entries[-1])
+    ax.set_ylim(bottom=0)
 
     return ax
