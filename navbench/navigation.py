@@ -81,7 +81,7 @@ def zeros_to_nones(vals):
     return ret
 
 
-def plot_route_idf(entries, *errs_args, filter_zeros=False, labels=None):
+def plot_route_idf(entries, *errs_args, filter_zeros=True, labels=None):
     if not labels:
         labels = len(errs_args[0]) * [None]
 

@@ -107,7 +107,7 @@ class Database:
         paths = [paths[entry] for entry in entries]
         return nb.read_images(paths, preprocess)
 
-    def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=False):
+    def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
         (lower, upper) = self.entry_bounds(max_dist, ref_entry)
         entries = range(lower, upper+fr_step, fr_step)
         dists = self.distances(ref_entry, entries)
@@ -150,7 +150,7 @@ class Database:
               (lower, upper, len(images)))
         return (images, snap, entries)
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=False):
+    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
         (images, snap, entries) = self.test_frames(
             ref_entry, frame_dist, preprocess, fr_step)
 

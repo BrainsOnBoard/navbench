@@ -100,7 +100,7 @@ def rca(errs, thresh=45, goal_idx=None, filter_size=1):
     return __total_ca(bounds)
 
 
-def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=False, ax=None):
+def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=True, ax=None):
     if ax is None:
         _, ax = plt.subplots()
 
