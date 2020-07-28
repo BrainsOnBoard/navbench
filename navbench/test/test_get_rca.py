@@ -14,21 +14,10 @@ def test_typical():
     assert bounds == (1, 3)
     assert rca(errs) == 2
 
+
 def test_explicit_goal():
     errs = [45, 10, 0, 10, 45]
     bounds2, _ = rca_bounds(errs, 45, 2)
-    assert bounds2 == (1, 3)
-
-
-def test_negative_angles():
-    errs1 = [-45, 10, 0, 10, 45]
-    bounds1, goal_idx1 = rca_bounds(errs1)
-    assert goal_idx1 == 2
-    assert bounds1 == (1, 3)
-
-    errs2 = [45, 10, 0, 10, -45]
-    bounds2, goal_idx2 = rca_bounds(errs2)
-    assert goal_idx2 == 2
     assert bounds2 == (1, 3)
 
 

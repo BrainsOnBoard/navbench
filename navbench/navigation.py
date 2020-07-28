@@ -61,9 +61,9 @@ def route_ridf(images, snap, step=1):
     return np.amin(ridf(images, snap, step), axis=1)
 
 
-def route_ridf_headings(images, snap, step=1):
+def route_ridf_errors(images, snap, step=1):
     diffs = ridf(images, snap, step)
-    return ridf_to_degrees(diffs)
+    return [abs(th) for th in ridf_to_degrees(diffs)]
 
 
 def plot_route_idf(entries, *diffs, labels=None):

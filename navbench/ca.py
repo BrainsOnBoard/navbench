@@ -83,18 +83,15 @@ def idf_ca(idf, goal_idx=None, filter_size=1):
 def rca_bounds(errs, thresh=45, goal_idx=None, filter_size=1):
     '''
     Get rotational catchment area:
-        i.e., area over which abs(errs) < some_threshold
+        i.e., area over which errs < some_threshold
 
     Differences from Andy's implementation:
         - filter_size defaults to 1, not 3
     '''
     assert thresh >= 0
 
-    # Angular errors must be absolute
-    errs = [abs(x) for x in errs]
-
     return __ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh,
-                           goal_idx, filter_size)
+                       goal_idx, filter_size)
 
 
 def rca(errs, thresh=45, goal_idx=None, filter_size=1):

@@ -41,7 +41,7 @@ class RIDFViewer(nb.Database):
         self.snap = self.read_images(goal, resize)
         print(len(self.images), 'images loaded')
 
-        errs = nb.route_ridf_headings(self.images, self.snap)
+        errs = nb.route_ridf_errors(self.images, self.snap)
         ca_bounds, goal2 = nb.rca_bounds(errs)
 
         nb.plot_ca(entries, errs, ca_bounds, goal2, ax=self.ax_plot)
