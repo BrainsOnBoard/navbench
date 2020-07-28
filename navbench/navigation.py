@@ -66,7 +66,7 @@ def route_ridf_errors(images, snap, step=1):
     return [abs(th) for th in ridf_to_degrees(diffs)]
 
 
-def do_filter_zeros(vals):
+def zeros_to_nones(vals):
     zeros = 0
     ret = []
     for val in vals:
@@ -75,7 +75,8 @@ def do_filter_zeros(vals):
             zeros += 1
         else:
             ret.append(val)
-    print('Warning: %i zero values (perfect matches?) are not being shown' %
+
+    print('%i zero values (perfect matches?) are not being shown' %
           zeros)
     return ret
 
@@ -83,15 +84,22 @@ def do_filter_zeros(vals):
 def plot_route_idf(entries, *errs_args, filter_zeros=False, labels=None):
     if not labels:
         labels = len(errs_args[0]) * [None]
+
     for errs, label in zip(errs_args, labels):
         if filter_zeros:
-            errs = do_filter_zeros(errs)
-
+            errs = zeros_to_nones(errs)
         plt.plot(entries, errs, label=label)
+
     plt.xlabel("Frame")
     plt.xlim(entries[0], entries[-1])
     plt.ylabel("Mean image diff (px)")
-    plt.ylim(0, plt.ylim()[1])
+    plt.ylim(bottom=0)
+
+    if filter_zeros:
+        for errs in errs_args:
+            for entry, val in zip(entries, errs):
+                if val == 0:
+                    plt.plot((entry, entry), plt.ylim(), 'r:')
 
     if labels[0]:
         plt.legend()

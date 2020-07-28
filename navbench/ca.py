@@ -105,12 +105,17 @@ def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=False, ax=None):
         _, ax = plt.subplots()
 
     if filter_zeros:
-        vals = nb.do_filter_zeros(vals)
+        vals = nb.zeros_to_nones(vals)
 
     ax.plot(entries, vals)
     ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
-    ax.plot([entries[goal_idx], entries[goal_idx]], ax.get_ylim(), 'k--')
     ax.set_xlim(entries[0], entries[-1])
     ax.set_ylim(bottom=0)
+    ax.plot([entries[goal_idx], entries[goal_idx]], ax.get_ylim(), 'k--')
+
+    if filter_zeros:
+        for entry, val in zip(entries, vals):
+            if val is None:
+                plt.plot((entry, entry), ax.get_ylim(), 'r:')
 
     return ax

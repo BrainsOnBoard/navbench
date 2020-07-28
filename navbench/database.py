@@ -132,8 +132,8 @@ class Database:
         ridf_diffs = nb.route_ridf(images, snap, ridf_step)
 
         if filter_zeros:
-            idf_diffs = nb.do_filter_zeros(idf_diffs)
-            ridf_diffs = nb.do_filter_zeros(ridf_diffs)
+            idf_diffs = nb.zeros_to_nones(idf_diffs)
+            ridf_diffs = nb.zeros_to_nones(ridf_diffs)
         ax[0].plot(dists, idf_diffs, dists, ridf_diffs)
         ax[0].set_xlabel("Distance (m)")
         ax[0].set_xlim(-max_dist, max_dist)
