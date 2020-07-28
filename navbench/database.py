@@ -48,6 +48,7 @@ def read_images(paths, preprocess=None):
     # Single string as input
     if isinstance(paths, str):
         im = cv2.imread(paths, cv2.IMREAD_GRAYSCALE)
+        assert im is not None # Check im loaded successfully
 
         # Run preprocessing step on images
         if preprocess:
