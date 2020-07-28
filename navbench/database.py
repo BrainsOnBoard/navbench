@@ -107,7 +107,7 @@ class Database:
         paths = [paths[entry] for entry in entries]
         return nb.read_images(paths, preprocess)
 
-    def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1):
+    def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=False):
         (lower, upper) = self.entry_bounds(max_dist, ref_entry)
         entries = range(lower, upper+fr_step, fr_step)
         dists = self.distances(ref_entry, entries)
@@ -131,6 +131,9 @@ class Database:
         idf_diffs = nb.route_idf(images, snap)
         ridf_diffs = nb.route_ridf(images, snap, ridf_step)
 
+        if filter_zeros:
+            idf_diffs = nb.do_filter_zeros(idf_diffs)
+            ridf_diffs = nb.do_filter_zeros(ridf_diffs)
         ax[0].plot(dists, idf_diffs, dists, ridf_diffs)
         ax[0].set_xlabel("Distance (m)")
         ax[0].set_xlim(-max_dist, max_dist)
@@ -147,10 +150,10 @@ class Database:
               (lower, upper, len(images)))
         return (images, snap, entries)
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1):
+    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=False):
         (images, snap, entries) = self.test_frames(
             ref_entry, frame_dist, preprocess, fr_step)
 
         idf_diffs = nb.route_idf(images, snap)
         ridf_diffs = nb.route_ridf(images, snap, ridf_step)
-        nb.plot_route_idf(entries, idf_diffs, ridf_diffs)
+        nb.plot_route_idf(entries, idf_diffs, ridf_diffs, filter_zeros=filter_zeros)
