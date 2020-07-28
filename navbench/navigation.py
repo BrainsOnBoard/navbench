@@ -81,20 +81,19 @@ def do_filter_zeros(vals):
 
 
 def plot_route_idf(entries, *errs_args, filter_zeros=False, labels=None):
+    if not labels:
+        labels = len(errs_args[0]) * [None]
     for errs, label in zip(errs_args, labels):
         if filter_zeros:
             errs = do_filter_zeros(errs)
 
-        if labels:
-            plt.plot(entries, errs, label=label)
-        else:
-            plt.plot(entries, errs)
+        plt.plot(entries, errs, label=label)
     plt.xlabel("Frame")
     plt.xlim(entries[0], entries[-1])
     plt.ylabel("Mean image diff (px)")
     plt.ylim(0, plt.ylim()[1])
 
-    if labels:
+    if labels[0]:
         plt.legend()
 
 
