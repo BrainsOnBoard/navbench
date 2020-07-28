@@ -102,15 +102,15 @@ def get_rca(errs, thresh=45, goal_idx=None, filter_size=1):
     return __get_total_ca(bounds)
 
 
-def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=True, ax=None):
+def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=False, ax=None):
     if ax is None:
         _, ax = plt.subplots()
 
-    # if filter_zeros:
-    #     zero_idx = [i for i, val in enumerate(vals) if val == 0]
-    #     vals[zero_idx] = None
-    #     print('Warning: %i zero values (perfect matches?) are not being shown' %
-    #           len(zero_idx))
+    if filter_zeros:
+        zero_idx = [i for i, val in enumerate(vals) if val == 0]
+        vals[zero_idx] = None
+        print('Warning: %i zero values (perfect matches?) are not being shown' %
+              len(zero_idx))
 
     ax.plot(entries, vals)
     ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')

@@ -45,7 +45,7 @@ class IDFViewer(nb.Database):
         idf = nb.get_route_idf(self.images, self.snap)
         ca_bounds, goal2 = nb.get_idf_ca_bounds(idf)
 
-        nb.plot_ca(entries, idf, ca_bounds, goal2, ax=self.ax_plot)
+        nb.plot_ca(entries, idf, ca_bounds, goal2, filter_zeros=True, ax=self.ax_plot)
 
         self.ax_goal.set_xticks([])
         self.ax_goal.set_yticks([])
