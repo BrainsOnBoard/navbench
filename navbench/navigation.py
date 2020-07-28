@@ -40,7 +40,7 @@ def ridf(images, snap, step=1):
     return diffs if diffs.shape[0] > 1 else diffs[0]
 
 
-def get_route_idf(images, snap):
+def route_idf(images, snap):
     return mean_absdiff(images, snap)
 
 
@@ -57,11 +57,11 @@ def ridf_to_degrees(diffs):
     return normalise180(ths)
 
 
-def get_route_ridf(images, snap, step=1):
+def route_ridf(images, snap, step=1):
     return np.amin(ridf(images, snap, step), axis=1)
 
 
-def get_route_ridf_headings(images, snap, step=1):
+def route_ridf_headings(images, snap, step=1):
     diffs = ridf(images, snap, step)
     return ridf_to_degrees(diffs)
 

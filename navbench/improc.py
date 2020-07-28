@@ -56,7 +56,7 @@ def threshold_otsu(im):
     return thresh
 
 
-def get_ground_mask(im):
+def ground_mask(im):
     # First, roughly threshold image
     im = threshold_otsu(im)
 
@@ -75,6 +75,6 @@ def get_ground_mask(im):
 
 def remove_sky(im):
     '''Sets the sky to 0'''
-    mask = get_ground_mask(im)
+    mask = ground_mask(im)
     im = cv2.bitwise_and(im, mask)
     return im

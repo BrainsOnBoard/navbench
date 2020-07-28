@@ -68,26 +68,26 @@ class Database:
     def __len__(self):
         return len(self.entries["filepath"])
 
-    def get_distance(self, i, j):
+    def distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
         dy = self.entries["y"][j] - self.entries["y"][i]
         dx = self.entries["x"][j] - self.entries["x"][i]
         return math.hypot(dy, dx)
 
-    def get_distances(self, ref_entry, entries):
+    def distances(self, ref_entry, entries):
         dists = []
         for i in entries:
-            dist = self.get_distance(ref_entry, i)
+            dist = self.distance(ref_entry, i)
             dists.append(dist if i >= ref_entry else -dist)
         return dists
 
-    def get_entry_bounds(self, max_dist, start_entry):
+    def entry_bounds(self, max_dist, start_entry):
         '''Get upper and lower bounds for frames > max_dist from start frame'''
         upper_entry = start_entry
-        while self.get_distance(start_entry, upper_entry) < max_dist:
+        while self.distance(start_entry, upper_entry) < max_dist:
             upper_entry += 1
         lower_entry = start_entry - 1
-        while self.get_distance(start_entry, lower_entry) < max_dist:
+        while self.distance(start_entry, lower_entry) < max_dist:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
@@ -106,9 +106,9 @@ class Database:
         return nb.read_images(paths, preprocess)
 
     def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1):
-        (lower, upper) = self.get_entry_bounds(max_dist, ref_entry)
+        (lower, upper) = self.entry_bounds(max_dist, ref_entry)
         entries = range(lower, upper+fr_step, fr_step)
-        dists = self.get_distances(ref_entry, entries)
+        dists = self.distances(ref_entry, entries)
 
         # Load snapshot and test images
         snap = self.read_images(ref_entry, preprocess)
@@ -126,8 +126,8 @@ class Database:
         ax[1].axis("equal")
 
         # Plot (R)IDF diffs vs distance
-        idf_diffs = nb.get_route_idf(images, snap)
-        ridf_diffs = nb.get_route_ridf(images, snap, ridf_step)
+        idf_diffs = nb.route_idf(images, snap)
+        ridf_diffs = nb.route_ridf(images, snap, ridf_step)
 
         ax[0].plot(dists, idf_diffs, dists, ridf_diffs)
         ax[0].set_xlabel("Distance (m)")
@@ -136,7 +136,7 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def get_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
+    def test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
         snap = self.read_images(ref_entry, preprocess)
@@ -146,9 +146,9 @@ class Database:
         return (images, snap, entries)
 
     def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1):
-        (images, snap, entries) = self.get_test_frames(
+        (images, snap, entries) = self.test_frames(
             ref_entry, frame_dist, preprocess, fr_step)
 
-        idf_diffs = nb.get_route_idf(images, snap)
-        ridf_diffs = nb.get_route_ridf(images, snap, ridf_step)
+        idf_diffs = nb.route_idf(images, snap)
+        ridf_diffs = nb.route_ridf(images, snap, ridf_step)
         nb.plot_route_idf(entries, idf_diffs, ridf_diffs)

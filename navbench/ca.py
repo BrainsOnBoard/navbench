@@ -3,7 +3,7 @@ import numpy as np
 from scipy.signal import medfilt
 
 
-def __get_ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
+def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
     '''
     Internal function. Get CA in leftward and rightward directions from goal
     position (taken as where the minimum value of vals is).
@@ -36,7 +36,7 @@ def __get_ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
     left = filter_vals(vals[goal_idx::-1])
     right = filter_vals(vals[goal_idx:])
 
-    def get_ca(vec):
+    def ca(vec):
         if not vec.size:  # Empty array
             return 0
 
@@ -47,23 +47,23 @@ def __get_ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
     # upper bounds of the input values and we indicate it by setting the bound
     # to None.
     try:
-        lower = goal_idx - get_ca(left)
+        lower = goal_idx - ca(left)
     except StopIteration:
         lower = None
     try:
-        upper = goal_idx + get_ca(right)
+        upper = goal_idx + ca(right)
     except StopIteration:
         upper = None
 
     return (lower, upper), goal_idx
 
 
-def __get_total_ca(bounds):
+def __total_ca(bounds):
     assert len(bounds) == 2
     return bounds[1] - bounds[0]
 
 
-def get_idf_ca_bounds(idf, goal_idx=None, filter_size=1):
+def idf_ca_bounds(idf, goal_idx=None, filter_size=1):
     '''
     Get catchment area for 1D IDF.
 
@@ -72,15 +72,15 @@ def get_idf_ca_bounds(idf, goal_idx=None, filter_size=1):
           rather than 0.
         - Cases where vector length > filter size cause an error
     '''
-    return __get_ca_bounds(idf, np.diff, lambda x: x < 0, goal_idx, filter_size)
+    return __ca_bounds(idf, np.diff, lambda x: x < 0, goal_idx, filter_size)
 
 
-def get_idf_ca(idf, goal_idx=None, filter_size=1):
-    bounds, _ = get_idf_ca_bounds(idf, goal_idx, filter_size)
-    return __get_total_ca(bounds)
+def idf_ca(idf, goal_idx=None, filter_size=1):
+    bounds, _ = idf_ca_bounds(idf, goal_idx, filter_size)
+    return __total_ca(bounds)
 
 
-def get_rca_bounds(errs, thresh=45, goal_idx=None, filter_size=1):
+def rca_bounds(errs, thresh=45, goal_idx=None, filter_size=1):
     '''
     Get rotational catchment area:
         i.e., area over which abs(errs) < some_threshold
@@ -93,13 +93,13 @@ def get_rca_bounds(errs, thresh=45, goal_idx=None, filter_size=1):
     # Angular errors must be absolute
     errs = [abs(x) for x in errs]
 
-    return __get_ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh,
+    return __ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh,
                            goal_idx, filter_size)
 
 
-def get_rca(errs, thresh=45, goal_idx=None, filter_size=1):
-    bounds, _ = get_rca_bounds(errs, thresh, goal_idx, filter_size)
-    return __get_total_ca(bounds)
+def rca(errs, thresh=45, goal_idx=None, filter_size=1):
+    bounds, _ = rca_bounds(errs, thresh, goal_idx, filter_size)
+    return __total_ca(bounds)
 
 
 def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=False, ax=None):
