@@ -66,12 +66,29 @@ def route_ridf_errors(images, snap, step=1):
     return [abs(th) for th in ridf_to_degrees(diffs)]
 
 
-def plot_route_idf(entries, *diffs, labels=None):
-    for diff, label in zip(diffs, labels):
-        if labels:
-            plt.plot(entries, diff, label=label)
+def do_filter_zeros(vals):
+    zeros = 0
+    ret = []
+    for val in vals:
+        if val == 0:
+            ret.append(None)
+            zeros += 1
         else:
-            plt.plot(entries, diff)
+            ret.append(val)
+    print('Warning: %i zero values (perfect matches?) are not being shown' %
+          zeros)
+    return ret
+
+
+def plot_route_idf(entries, *errs_args, filter_zeros=False, labels=None):
+    for errs, label in zip(errs_args, labels):
+        if filter_zeros:
+            errs = do_filter_zeros(errs)
+
+        if labels:
+            plt.plot(entries, errs, label=label)
+        else:
+            plt.plot(entries, errs)
     plt.xlabel("Frame")
     plt.xlim(entries[0], entries[-1])
     plt.ylabel("Mean image diff (px)")

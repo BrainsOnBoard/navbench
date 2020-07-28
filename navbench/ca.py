@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import medfilt
 
+import navbench as nb
 
 def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
     '''
@@ -104,10 +105,7 @@ def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=False, ax=None):
         _, ax = plt.subplots()
 
     if filter_zeros:
-        zero_idx = [i for i, val in enumerate(vals) if val == 0]
-        vals[zero_idx] = None
-        print('Warning: %i zero values (perfect matches?) are not being shown' %
-              len(zero_idx))
+        vals = nb.do_filter_zeros(vals)
 
     ax.plot(entries, vals)
     ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
