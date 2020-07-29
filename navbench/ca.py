@@ -4,62 +4,88 @@ from scipy.signal import medfilt
 
 import navbench as nb
 
-def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, medfilt_size):
-    '''
-    Internal function. Get CA in leftward and rightward directions from goal
-    position (taken as where the minimum value of vals is).
-    '''
 
-    # Convert to numpy array
-    vals = np.array(vals)
+class CatchmentArea:
+    def __init__(self, vals, process_fun, thresh_fun, goal_idx, medfilt_size):
+        # Convert to numpy array
+        vals = np.array(vals)
 
-    if vals.ndim != 1 or len(vals) == 0:
-        raise ValueError('Input values must be vector')
+        if vals.ndim != 1 or len(vals) == 0:
+            raise ValueError('Input values must be vector')
 
-    if goal_idx is None:
-        # Assume goal is where minimum is
-        goal_idx = np.argmin(vals)
+        if goal_idx is None:
+            # Assume goal is where minimum is
+            goal_idx = np.argmin(vals)
 
-    # Do median filtering
-    vals = medfilt(vals, medfilt_size)
+        # Do median filtering
+        self.filtered_vals = medfilt(vals, medfilt_size)
 
-    # Apply process_fun to values from left and right of goal
-    left = vals[goal_idx::-1]
-    if len(left) > 0:
-        left = process_fun(left)
-    right = vals[goal_idx:]
-    if len(right) > 0:
-        right = process_fun(right)
+        # Apply process_fun to values from left and right of goal
+        left = self.filtered_vals[goal_idx::-1]
+        if len(left) > 0:
+            left = process_fun(left)
+        right = self.filtered_vals[goal_idx:]
+        if len(right) > 0:
+            right = process_fun(right)
 
-    def ca(vec):
-        if not vec.size:  # Empty array
-            return 0
+        def ca(vec):
+            if not vec.size:  # Empty array
+                return 0
 
-        # Return index of first value in vec for which thresh_fun() returns true
-        return next(i for i, val in enumerate(vec) if thresh_fun(val))
+            # Return index of first value in vec for which thresh_fun() returns true
+            return next(i for i, val in enumerate(vec) if thresh_fun(val))
 
-    # A StopIteration error is raised when there are no values for which
-    # thresh_fun() == True. In this case the CA extends beyond the lower or
-    # upper bounds of the input values and we indicate it by setting the bound
-    # to None.
-    try:
-        lower = goal_idx - ca(left)
-    except StopIteration:
-        lower = None
-    try:
-        upper = goal_idx + ca(right)
-    except StopIteration:
-        upper = None
+        # A StopIteration error is raised when there are no values for which
+        # thresh_fun() == True. In this case the CA extends beyond the lower or
+        # upper bounds of the input values and we indicate it by setting the bound
+        # to None.
+        try:
+            lower = goal_idx - ca(left)
+        except StopIteration:
+            lower = None
+        try:
+            upper = goal_idx + ca(right)
+        except StopIteration:
+            upper = None
 
-    return (lower, upper), goal_idx, vals
+        self.bounds = (lower, upper)
+        self.goal_idx = goal_idx
+        self.vals = vals
+
+    def size(self):
+        return self.bounds[1] - self.bounds[0]
+
+    def plot(self, entries, filter_zeros=True, ax=None):
+        if ax is None:
+            _, ax = plt.subplots()
+
+        if filter_zeros:
+            zeros = self.vals == 0
+            self.vals = np.array(self.vals)
+            self.vals[zeros] = None
+            self.filtered_vals[zeros] = None
+            print(sum(zeros), 'zero values are not being shown')
+
+        lines = ax.plot(entries, self.vals)
+        if self.filtered_vals is not None:
+            ax.plot(entries, self.filtered_vals,
+                    ':', color=lines[0].get_color())
+        ax.plot(entries[self.bounds[0]:self.bounds[1]],
+                self.vals[self.bounds[0]:self.bounds[1]], 'r')
+        ax.set_xlim(entries[0], entries[-1])
+        ax.set_ylim(bottom=0)
+        ax.plot([entries[self.goal_idx], entries[self.goal_idx]],
+                ax.get_ylim(), 'k--')
+
+        if filter_zeros:
+            for entry, val in zip(entries, self.vals):
+                if val is None:
+                    plt.plot((entry, entry), ax.get_ylim(), 'r:')
+
+        return ax
 
 
-def __total_ca(bounds):
-    assert len(bounds) == 2
-    return bounds[1] - bounds[0]
-
-
-def idf_ca_bounds(idf, goal_idx=None, medfilt_size=1):
+def calculate_ca(idf, goal_idx=None, medfilt_size=1):
     '''
     Get catchment area for 1D IDF.
 
@@ -68,15 +94,10 @@ def idf_ca_bounds(idf, goal_idx=None, medfilt_size=1):
           rather than 0.
         - Cases where vector length > filter size cause an error
     '''
-    return __ca_bounds(idf, np.diff, lambda x: x < 0, goal_idx, medfilt_size)
+    return CatchmentArea(idf, np.diff, lambda x: x < 0, goal_idx, medfilt_size)
 
 
-def idf_ca(idf, goal_idx=None, medfilt_size=1):
-    bounds, *_ = idf_ca_bounds(idf, goal_idx, medfilt_size)
-    return __total_ca(bounds)
-
-
-def rca_bounds(errs, thresh=45, goal_idx=None, medfilt_size=1):
+def calculate_rca(errs, thresh=45, goal_idx=None, medfilt_size=1):
     '''
     Get rotational catchment area:
         i.e., area over which errs < some_threshold
@@ -86,31 +107,5 @@ def rca_bounds(errs, thresh=45, goal_idx=None, medfilt_size=1):
     '''
     assert thresh >= 0
 
-    return __ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh,
-                       goal_idx, medfilt_size)
-
-
-def rca(errs, thresh=45, goal_idx=None, medfilt_size=1):
-    bounds, *_ = rca_bounds(errs, thresh, goal_idx, medfilt_size)
-    return __total_ca(bounds)
-
-
-def plot_ca(entries, vals, bounds, goal_idx, filter_zeros=True, ax=None):
-    if ax is None:
-        _, ax = plt.subplots()
-
-    if filter_zeros:
-        vals = nb.zeros_to_nones(vals)
-
-    ax.plot(entries, vals)
-    ax.plot(entries[bounds[0]:bounds[1]], vals[bounds[0]:bounds[1]], 'r')
-    ax.set_xlim(entries[0], entries[-1])
-    ax.set_ylim(bottom=0)
-    ax.plot([entries[goal_idx], entries[goal_idx]], ax.get_ylim(), 'k--')
-
-    if filter_zeros:
-        for entry, val in zip(entries, vals):
-            if val is None:
-                plt.plot((entry, entry), ax.get_ylim(), 'r:')
-
-    return ax
+    return CatchmentArea(errs, lambda x: x[1:], lambda th: th >= thresh,
+                         goal_idx, medfilt_size)
