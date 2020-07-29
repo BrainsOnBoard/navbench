@@ -43,6 +43,16 @@ def read_image_database(path):
     return entries
 
 
+def apply_functions(im, funs):
+    if funs is None:
+        return im
+    if isinstance(funs, Iterable):
+        for fun in funs:
+            im = apply_functions(im, fun)
+        return im
+    return funs(im)
+
+
 def read_images(paths, preprocess=None):
     """Returns greyscale image(s) of type float."""
 
@@ -52,8 +62,7 @@ def read_images(paths, preprocess=None):
         assert im is not None  # Check im loaded successfully
 
         # Run preprocessing step on images
-        if preprocess:
-            im = preprocess(im)
+        im = apply_functions(im, preprocess)
 
         return im
 
@@ -95,10 +104,7 @@ class Database:
 
     def read_images(self, entries, preprocess=None):
         # Convert all the images to floats before we use them
-        if preprocess is None:
-            preprocess = improc.to_float
-        else:
-            preprocess = improc.chain(preprocess, improc.to_float)
+        preprocess = (preprocess, improc.to_float)
 
         paths = self.entries["filepath"]
         if not isinstance(entries, Iterable):
