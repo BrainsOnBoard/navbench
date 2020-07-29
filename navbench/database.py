@@ -141,7 +141,7 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
+    def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
         snap = self.read_images(ref_entry, preprocess)
@@ -151,7 +151,7 @@ class Database:
         return (images, snap, entries)
 
     def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
-        (images, snap, entries) = self.test_frames(
+        (images, snap, entries) = self.load_test_frames(
             ref_entry, frame_dist, preprocess, fr_step)
 
         idf_diffs = nb.route_idf(images, snap)
