@@ -76,8 +76,7 @@ def zeros_to_nones(vals):
         else:
             ret.append(val)
 
-    print('%i zero values (perfect matches?) are not being shown' %
-          zeros)
+    print('%i zero values (perfect matches?) are not being shown' % zeros)
     return ret
 
 
