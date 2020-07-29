@@ -4,7 +4,7 @@ from scipy.signal import medfilt
 
 import navbench as nb
 
-def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
+def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, medfilt_size):
     '''
     Internal function. Get CA in leftward and rightward directions from goal
     position (taken as where the minimum value of vals is).
@@ -20,27 +20,22 @@ def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
         # Assume goal is where minimum is
         goal_idx = np.argmin(vals)
 
-    def filter_vals(vec):
-        vec = process_fun(vec)
+    # Do median filtering
+    vals = medfilt(vals, medfilt_size)
 
-        # Median filtering doesn't make sense in this case
-        if not vec.size:
-            return np.empty(0)
-
-        # This is invalid -- give error rather than spurious return values
-        if len(vec) < filter_size:
-            raise ValueError('Filter size is greater than vector length')
-
-        return medfilt(vec, filter_size)
-
-    # Apply filter to values from left and right of goal
-    left = filter_vals(vals[goal_idx::-1])
-    right = filter_vals(vals[goal_idx:])
+    # Apply process_fun to values from left and right of goal
+    left = vals[goal_idx::-1]
+    if len(left) > 0:
+        left = process_fun(left)
+    right = vals[goal_idx:]
+    if len(right) > 0:
+        right = process_fun(right)
 
     def ca(vec):
         if not vec.size:  # Empty array
             return 0
 
+        # Return index of first value in vec for which thresh_fun() returns true
         return next(i for i, val in enumerate(vec) if thresh_fun(val))
 
     # A StopIteration error is raised when there are no values for which
@@ -56,7 +51,7 @@ def __ca_bounds(vals, process_fun, thresh_fun, goal_idx, filter_size):
     except StopIteration:
         upper = None
 
-    return (lower, upper), goal_idx
+    return (lower, upper), goal_idx, vals
 
 
 def __total_ca(bounds):
@@ -64,7 +59,7 @@ def __total_ca(bounds):
     return bounds[1] - bounds[0]
 
 
-def idf_ca_bounds(idf, goal_idx=None, filter_size=1):
+def idf_ca_bounds(idf, goal_idx=None, medfilt_size=1):
     '''
     Get catchment area for 1D IDF.
 
@@ -73,30 +68,30 @@ def idf_ca_bounds(idf, goal_idx=None, filter_size=1):
           rather than 0.
         - Cases where vector length > filter size cause an error
     '''
-    return __ca_bounds(idf, np.diff, lambda x: x < 0, goal_idx, filter_size)
+    return __ca_bounds(idf, np.diff, lambda x: x < 0, goal_idx, medfilt_size)
 
 
-def idf_ca(idf, goal_idx=None, filter_size=1):
-    bounds, _ = idf_ca_bounds(idf, goal_idx, filter_size)
+def idf_ca(idf, goal_idx=None, medfilt_size=1):
+    bounds, *_ = idf_ca_bounds(idf, goal_idx, medfilt_size)
     return __total_ca(bounds)
 
 
-def rca_bounds(errs, thresh=45, goal_idx=None, filter_size=1):
+def rca_bounds(errs, thresh=45, goal_idx=None, medfilt_size=1):
     '''
     Get rotational catchment area:
         i.e., area over which errs < some_threshold
 
     Differences from Andy's implementation:
-        - filter_size defaults to 1, not 3
+        - medfilt_size defaults to 1, not 3
     '''
     assert thresh >= 0
 
     return __ca_bounds(errs, lambda x: x[1:], lambda th: th >= thresh,
-                       goal_idx, filter_size)
+                       goal_idx, medfilt_size)
 
 
-def rca(errs, thresh=45, goal_idx=None, filter_size=1):
-    bounds, _ = rca_bounds(errs, thresh, goal_idx, filter_size)
+def rca(errs, thresh=45, goal_idx=None, medfilt_size=1):
+    bounds, *_ = rca_bounds(errs, thresh, goal_idx, medfilt_size)
     return __total_ca(bounds)
 
 

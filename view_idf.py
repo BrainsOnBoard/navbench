@@ -43,7 +43,7 @@ class IDFViewer(nb.Database):
         print(len(self.images), 'images loaded')
 
         idf = nb.route_idf(self.images, self.snap)
-        ca_bounds, goal2 = nb.idf_ca_bounds(idf)
+        ca_bounds, goal2, *_ = nb.idf_ca_bounds(idf)
 
         nb.plot_ca(entries, idf, ca_bounds, goal2, filter_zeros=True, ax=self.ax_plot)
 
