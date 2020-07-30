@@ -53,5 +53,8 @@ def test_medfilt_left():
 
 
 def test_medfilt_both():
-    ca = calculate_ca([1, 3, 1, 2, 1, 0, 1, 2, 1, 3, 1], medfilt_size=3)
-    assert ca.size() == 6
+    ca = calculate_ca([1, 3, 1, 2, 1, 0, 0, 0, 1, 2, 1, 3, 1], medfilt_size=3)
+    assert (ca.filtered_vals == [1, 1, 2, 1, 1, 0, 0, 0, 1, 1, 2, 1, 1]).all()
+    assert ca.goal_idx == 5
+    assert ca.bounds == (2, 10)
+    assert ca.size() == 8

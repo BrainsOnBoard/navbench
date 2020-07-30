@@ -13,12 +13,12 @@ class CatchmentArea:
         if vals.ndim != 1 or len(vals) == 0:
             raise ValueError('Input values must be vector')
 
-        if goal_idx is None:
-            # Assume goal is where minimum is
-            goal_idx = np.argmin(vals)
-
         # Do median filtering
         self.filtered_vals = medfilt(vals, medfilt_size)
+
+        if goal_idx is None:
+            # Assume goal is where minimum is
+            goal_idx = np.argmin(self.filtered_vals)
 
         # Apply process_fun to values from left and right of goal
         left = self.filtered_vals[goal_idx::-1]
