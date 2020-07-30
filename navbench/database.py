@@ -19,13 +19,14 @@ def read_image_database(path):
     except FileNotFoundError:
         print("Warning: No CSV file found for", path)
 
+        fnames = [f for f in listdir(path) if f.endswith('.png') or f.endswith('.jpg')]
+
         # If there's no CSV file then just treat all the files in the folder as
         # separate entries. Note that the files will be in alphabetical order,
         # which may not be what you want!
         entries = {
-            "filepath": [f for f in [join(path, f) for f in listdir(path)] if isfile(f)]
+            "filepath": sorted([join(path, f) for f in fnames])
         }
-        entries["filepath"].sort()
 
         return entries
 
