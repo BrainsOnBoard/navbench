@@ -55,7 +55,7 @@ class CatchmentArea:
     def size(self):
         return self.bounds[1] - self.bounds[0]
 
-    def plot(self, entries, filter_zeros=True, ax=None):
+    def plot(self, entries, filter_zeros=True, ymax=None, ax=None):
         if ax is None:
             _, ax = plt.subplots()
 
@@ -73,9 +73,9 @@ class CatchmentArea:
         ax.plot(entries[self.bounds[0]:self.bounds[1]],
                 self.vals[self.bounds[0]:self.bounds[1]], 'r')
         ax.set_xlim(entries[0], entries[-1])
-        ax.set_ylim(bottom=0)
-        ax.plot([entries[self.goal_idx], entries[self.goal_idx]],
-                ax.get_ylim(), 'k--')
+        ymax = ymax or ax.get_ylim()[1]
+        ax.plot([entries[self.goal_idx]] * 2, (0, ymax), 'k--')
+        ax.set_ylim(0, ymax)
 
         if filter_zeros:
             for entry, val in zip(entries, self.vals):
