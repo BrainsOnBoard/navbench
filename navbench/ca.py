@@ -53,6 +53,8 @@ class CatchmentArea:
         self.vals = vals
 
     def size(self):
+        if None in self.bounds:
+            return None
         return self.bounds[1] - self.bounds[0]
 
     def plot(self, entries, filter_zeros=True, ymax=None, ax=None):
