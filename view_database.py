@@ -12,7 +12,7 @@ BIG_STEP = 10  # frames
 
 class DatabaseViewer(nb.Database):
     def __init__(self, path):
-        nb.Database.__init__(self, path, fullpath=True)
+        nb.Database.__init__(self, path)
         self.figure, self.axes = plt.subplots()
         self.figure.canvas.mpl_connect('key_press_event', self.key_pressed)
         self.axes_image = None

@@ -1,11 +1,8 @@
 import math
-from os import listdir
-from os.path import isfile, join
-import pathlib
+import os
 from collections.abc import Iterable
 
 import cv2
-import numpy as np
 import pandas as pd
 
 import navbench as nb
@@ -15,17 +12,18 @@ from navbench import improc
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
     try:
-        df = pd.read_csv(join(path, "database_entries.csv"))
+        df = pd.read_csv(os.path.join(path, "database_entries.csv"))
     except FileNotFoundError:
         print("Warning: No CSV file found for", path)
 
-        fnames = [f for f in listdir(path) if f.endswith('.png') or f.endswith('.jpg')]
+        fnames = [f for f in os.listdir(path) if f.endswith(
+            '.png') or f.endswith('.jpg')]
 
         # If there's no CSV file then just treat all the files in the folder as
         # separate entries. Note that the files will be in alphabetical order,
         # which may not be what you want!
         entries = {
-            "filepath": sorted([join(path, f) for f in fnames])
+            "filepath": sorted([os.path.join(path, f) for f in fnames])
         }
 
         return entries
@@ -38,7 +36,7 @@ def read_image_database(path):
         "y": df["Y [mm]"] / 1000,
         "z": df["Z [mm]"] / 1000,
         "heading": df["Heading [degrees]"],
-        "filepath": [join(path, fn.strip()) for fn in df["Filename"]]
+        "filepath": [os.path.join(path, fn.strip()) for fn in df["Filename"]]
     }
 
     return entries
@@ -71,10 +69,7 @@ def read_images(paths, preprocess=None):
 
 
 class Database:
-    def __init__(self, path, fullpath=False):
-        if not fullpath:
-            MODPATH = pathlib.Path(__file__).resolve().parent
-            path = join(MODPATH.parent, 'databases', path)
+    def __init__(self, path):
         self.entries = nb.read_image_database(path)
 
     def __len__(self):
@@ -163,4 +158,5 @@ class Database:
 
         idf_diffs = nb.route_idf(images, snap)
         ridf_diffs = nb.route_ridf(images, snap, ridf_step)
-        nb.plot_route_idf(entries, idf_diffs, ridf_diffs, filter_zeros=filter_zeros)
+        nb.plot_route_idf(entries, idf_diffs, ridf_diffs,
+                          filter_zeros=filter_zeros)

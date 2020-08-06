@@ -10,7 +10,7 @@ from navbench import improc as ip
 
 class IDFViewer(nb.Database):
     def __init__(self, database, goal=None, bound_size=None):
-        nb.Database.__init__(self, database, fullpath=True)
+        nb.Database.__init__(self, database)
         self.figure, axes = plt.subplots(4)
         self.axes_image = None
         self.axes_diffim = None
