@@ -99,15 +99,16 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def read_images(self, entries, preprocess=None):
+    def read_images(self, entries=None, preprocess=None):
         # Convert all the images to floats before we use them
         preprocess = (preprocess, improc.to_float)
 
         paths = self.entries["filepath"]
-        if not isinstance(entries, Iterable):
-            return nb.read_images(paths[entries], preprocess)
+        if not entries is None: # (otherwise load all images)
+            if not isinstance(entries, Iterable):
+                return nb.read_images(paths[entries], preprocess)
 
-        paths = [paths[entry] for entry in entries]
+            paths = [paths[entry] for entry in entries]
         return nb.read_images(paths, preprocess)
 
     def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
