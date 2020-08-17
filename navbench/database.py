@@ -53,7 +53,7 @@ def apply_functions(im, funs):
 
 
 def read_images(paths, preprocess=None):
-    """Returns greyscale image(s) of type float."""
+    """Returns greyscale image(s) from specified paths."""
 
     # Single string as input
     if isinstance(paths, str):
@@ -65,6 +65,7 @@ def read_images(paths, preprocess=None):
 
         return im
 
+    # Otherwise, we have a collection of paths
     return [read_images(path, preprocess) for path in paths]
 
 
