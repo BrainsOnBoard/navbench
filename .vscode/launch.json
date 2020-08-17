@@ -17,7 +17,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/view_ridf.py",
             "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/databases/newton/route1"]
+            "args": ["${workspaceFolder}/datasets/newton/route1"]
         },
         {
             "name": "view_idf.py",
@@ -25,7 +25,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/view_idf.py",
             "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/databases/newton/route1"]
+            "args": ["${workspaceFolder}/datasets/newton/route1"]
         }
     ]
 }

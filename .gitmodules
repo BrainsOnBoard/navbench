@@ -1,9 +1,9 @@
-[submodule "databases/bottom_of_campus"]
-	path = databases/bottom_of_campus
+[submodule "datasets/bottom_of_campus"]
+	path = datasets/bottom_of_campus
 	url = ../bottom_of_campus
-[submodule "databases/newton"]
-	path = databases/newton
+[submodule "datasets/newton"]
+	path = datasets/newton
 	url = ../newton_agritech_tractor_image_databases
-[submodule "databases/rc_car"]
-	path = databases/rc_car
+[submodule "datasets/rc_car"]
+	path = datasets/rc_car
 	url = ../rc_car_image_databases

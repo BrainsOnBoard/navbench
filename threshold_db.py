@@ -5,7 +5,7 @@ import navbench as nb
 from navbench import improc as ip
 
 for i in range(0, 1000, 100):
-    path = "databases/bottom_of_campus/straight_route2_fwd/frame%05i.jpg" % i
+    path = "datasets/bottom_of_campus/straight_route2_fwd/frame%05i.jpg" % i
     print(path)
 
     im = nb.read_images(path)
