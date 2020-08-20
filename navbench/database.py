@@ -99,9 +99,10 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def read_images(self, entries=None, preprocess=None):
-        # Convert all the images to floats before we use them
-        preprocess = (preprocess, improc.to_float)
+    def read_images(self, entries=None, preprocess=None, to_float=True):
+        if to_float:
+            # Convert all the images to floats before we use them
+            preprocess = (preprocess, improc.to_float)
 
         paths = self.entries["filepath"]
         if not entries is None: # (otherwise load all images)
