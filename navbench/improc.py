@@ -18,6 +18,12 @@ def to_float(im):
     return im.astype(np.float) / info.max
 
 
+def add_randomness(im, sigma):
+    assert im.dtype == np.float
+    im += sigma * np.random.standard_normal(im.shape)
+    return np.clip(im, 0, 1)
+
+
 def fill_holes(im):
     '''Fills in any black objects'''
     assert im.dtype == np.uint8
