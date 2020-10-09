@@ -107,7 +107,7 @@ def plot_route_idf(entries, *errs_args, ax=None, filter_zeros=True, labels=None)
         ax.legend()
 
 
-def plot_ridf(diffs, ax=None):
+def plot_ridf(diffs, ax=None, im=None):
     assert diffs.ndim == 1
 
     # We want the plot to go from -180° to 180°, so we wrap around
@@ -124,5 +124,10 @@ def plot_ridf(diffs, ax=None):
     ax.set_xlim(-180, 180)
     ax.set_ylim(bottom=0)
     ax.set_xticks(range(-180, 181, 45))
+
+    if im is not None:
+        ext = (*ax.get_xlim(), *ax.get_ylim())
+        ax.imshow(im, cmap='gray', zorder=0, extent=ext)
+        ax.set_aspect((im.shape[0] / im.shape[1]) * ((ext[1] - ext[0]) / (ext[3] - ext[2])))
 
     return ax
