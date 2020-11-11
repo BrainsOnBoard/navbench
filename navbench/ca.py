@@ -69,6 +69,8 @@ class CatchmentArea:
         if ax is None:
             _, ax = plt.subplots()
 
+        # (Optionally) filter out perfect matches as they're essentially
+        # spurious and they make graphs appear more V-shaped than they truly are
         if filter_zeros:
             zeros = self.vals == 0
             self.vals = np.array(self.vals)
@@ -76,21 +78,23 @@ class CatchmentArea:
             self.filtered_vals[zeros] = None
             print(sum(zeros), 'zero values are not being shown')
 
+        # Plot unfiltered values
         lines = ax.plot(entries, self.vals)
+
+        # Plot dotted line over the top to show median-filtered values
         if self.filtered_vals is not None:
             ax.plot(entries, self.filtered_vals,
                     ':', color=lines[0].get_color())
+
+        # Indicate the CA by plotting a red line over the top
         ax.plot(entries[self.bounds[0]:self.bounds[1]],
                 self.vals[self.bounds[0]:self.bounds[1]], 'r')
         ax.set_xlim(entries[0], entries[-1])
+
+        # Show the goal as a dashed black line
         ymax = ymax or ax.get_ylim()[1]
         ax.plot([entries[self.goal_idx]] * 2, (0, ymax), 'k--')
         ax.set_ylim(0, ymax)
-
-        if filter_zeros:
-            for entry, val in zip(entries, self.vals):
-                if val is None:
-                    plt.plot((entry, entry), ax.get_ylim(), 'r:')
 
         return ax
 
