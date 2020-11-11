@@ -16,9 +16,17 @@ class CatchmentArea:
         # Do median filtering
         self.filtered_vals = medfilt(vals, medfilt_size)
 
+        # If goal_idx not provided, then we estimate it. If there is a perfect
+        # match then we can safely assume this is the intended goal (because it
+        # it is a self-vs-self comparison) and otherwise just assume the best
+        # matching val indicates the goal.
         if goal_idx is None:
-            # Assume goal is where minimum is
-            goal_idx = np.argmin(self.filtered_vals)
+            indices = np.where(vals == 0)[0]
+            if indices.size:
+                goal_idx = indices[0]
+            else:
+                print('WARNING: Could not find exact match, using best match as goal')
+                goal_idx = np.argmin(self.filtered_vals)
 
         # Apply process_fun to values from left and right of goal
         left = self.filtered_vals[goal_idx::-1]
