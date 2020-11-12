@@ -26,6 +26,14 @@
             "program": "${workspaceFolder}/view_idf.py",
             "console": "integratedTerminal",
             "args": ["${workspaceFolder}/datasets/newton/route1"]
+        },
+        {
+            "name": "run_tests.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_tests.py",
+            "console": "integratedTerminal",
+            "args": ["${workspaceFolder}/datasets/newton/route1"]
         }
     ]
 }
