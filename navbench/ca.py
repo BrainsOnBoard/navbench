@@ -84,15 +84,19 @@ class CatchmentArea:
         # Plot unfiltered values
         lines = ax.plot(xs, self.vals)
 
-        # Plot dotted line over the top to show median-filtered values
-        if self.filtered_vals is not None:
-            ax.plot(xs, self.filtered_vals,
-                    ':', color=lines[0].get_color())
-
         # Indicate the CA by plotting a red line over the top
         ax.plot(xs[self.bounds[0]:self.bounds[1]],
                 self.vals[self.bounds[0]:self.bounds[1]], 'r')
         ax.set_xlim(xs[0], xs[-1])
+
+        # Plot dotted lines over the top to show median-filtered values
+        if self.filtered_vals is not None:
+            ax.plot(xs, self.filtered_vals,
+                    ':', color=lines[0].get_color())
+
+            ax.plot(xs[self.bounds[0]:self.bounds[1]],
+                    self.filtered_vals[self.bounds[0]:self.bounds[1]], 'r:')
+
 
         # Show the goal as a dashed black line
         ymax = ymax or ax.get_ylim()[1]
