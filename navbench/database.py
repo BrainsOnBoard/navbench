@@ -95,7 +95,7 @@ class Database:
         upper_entry = start_entry
         while self.distance(start_entry, upper_entry) < max_dist:
             upper_entry += 1
-        lower_entry = start_entry - 1
+        lower_entry = start_entry
         while self.distance(start_entry, lower_entry) < max_dist:
             lower_entry -= 1
         return (lower_entry, upper_entry)
@@ -106,7 +106,7 @@ class Database:
             preprocess = (preprocess, improc.to_float)
 
         paths = self.entries["filepath"]
-        if not entries is None: # (otherwise load all images)
+        if not entries is None:  # (otherwise load all images)
             if not isinstance(entries, Iterable):
                 return nb.read_images(paths[entries], preprocess)
 
