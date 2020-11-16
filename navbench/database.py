@@ -5,6 +5,7 @@ from collections.abc import Iterable
 import cv2
 import numpy as np
 import pandas as pd
+import yaml
 
 import navbench as nb
 from navbench import improc
@@ -73,6 +74,20 @@ def read_images(paths, preprocess=None):
 class Database:
     def __init__(self, path):
         self.entries = nb.read_image_database(path)
+
+        metadata_path = os.path.join(path, "database_metadata.yaml")
+        try:
+            with open(metadata_path, 'r') as file:
+                # OpenCV puts crap on the first two lines of the file; skip them
+                file.readline()
+                file.readline()
+                self.metadata = yaml.full_load(file)["metadata"]
+        except:
+            self.metadata = None
+            print("WARNING: Could not read database_metadata.yaml")
+
+        if self.metadata and self.metadata['needsUnwrapping']:
+            print("WARNING: This database has not been unwrapped. Analysis may not make sense!")
 
     def __len__(self):
         return len(self.entries["filepath"])
