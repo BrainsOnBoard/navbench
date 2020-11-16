@@ -12,20 +12,6 @@ from navbench import improc
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
     try:
-        df = pd.read_csv(os.path.join(path, "coordinates.csv"))
-
-        # strip whitespace from column headers
-        df = df.rename(columns=lambda x: x.strip())
-
-        entries = {
-            "filepath": [os.path.join(path, fn.strip()) for fn in df["image name"]]
-        }
-
-        return entries
-    except FileNotFoundError:
-        pass
-
-    try:
         df = pd.read_csv(os.path.join(path, "database_entries.csv"))
     except FileNotFoundError:
         print("Warning: No CSV file found for", path)
