@@ -87,7 +87,8 @@ class Database:
             print("WARNING: Could not read database_metadata.yaml")
 
         if self.metadata and self.metadata['needsUnwrapping']:
-            print("WARNING: This database has not been unwrapped. Analysis may not make sense!")
+            print("!!!!! WARNING: This database has not been unwrapped." +
+                  "Analysis may not make sense! !!!!!")
 
     def __len__(self):
         return len(self.entries["filepath"])
