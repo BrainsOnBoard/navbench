@@ -3,6 +3,7 @@ import os
 from collections.abc import Iterable
 
 import cv2
+import numpy as np
 import pandas as pd
 
 import navbench as nb
@@ -78,9 +79,9 @@ class Database:
 
     def distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
-        dy = self.entries["y"][j] - self.entries["y"][i]
-        dx = self.entries["x"][j] - self.entries["x"][i]
-        return math.hypot(dy, dx)
+        p1 = (self.entries['x'][i], self.entries['y'][i])
+        p2 = (self.entries['x'][j], self.entries['y'][j])
+        return np.linalg.norm(np.array(p1) - np.array(p2))
 
     def distances(self, ref_entry, entries):
         dists = []
