@@ -65,7 +65,10 @@ class CatchmentArea:
             return None
         return self.bounds[1] - self.bounds[0]
 
-    def plot(self, entries, filter_zeros=True, ymax=None, ax=None):
+    def plot(self, xs, filter_zeros=True, ymax=None, ax=None):
+        # Check entries is sorted
+        assert all(xs[i] <= xs[i + 1] for i in range(len(xs) - 1))
+
         if ax is None:
             _, ax = plt.subplots()
 
@@ -79,21 +82,21 @@ class CatchmentArea:
             print(sum(zeros), 'zero values are not being shown')
 
         # Plot unfiltered values
-        lines = ax.plot(entries, self.vals)
+        lines = ax.plot(xs, self.vals)
 
         # Plot dotted line over the top to show median-filtered values
         if self.filtered_vals is not None:
-            ax.plot(entries, self.filtered_vals,
+            ax.plot(xs, self.filtered_vals,
                     ':', color=lines[0].get_color())
 
         # Indicate the CA by plotting a red line over the top
-        ax.plot(entries[self.bounds[0]:self.bounds[1]],
+        ax.plot(xs[self.bounds[0]:self.bounds[1]],
                 self.vals[self.bounds[0]:self.bounds[1]], 'r')
-        ax.set_xlim(entries[0], entries[-1])
+        ax.set_xlim(xs[0], xs[-1])
 
         # Show the goal as a dashed black line
         ymax = ymax or ax.get_ylim()[1]
-        ax.plot([entries[self.goal_idx]] * 2, (0, ymax), 'k--')
+        ax.plot([xs[self.goal_idx]] * 2, (0, ymax), 'k--')
         ax.set_ylim(0, ymax)
 
         return ax
