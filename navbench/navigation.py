@@ -12,6 +12,10 @@ def to_3d_array(images):
     raise ValueError("images must be a 2d or 3d array")
 
 
+def euclidean_distance(p1, p2):
+    return np.linalg.norm(np.array(p1) - np.array(p2))
+
+
 def mean_absdiff(x, y):
     """Return mean absolute difference between two images or sets of images
     (as 3D matrices). """
