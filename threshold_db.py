@@ -1,13 +1,24 @@
-# Try to remove sky from a bunch of images and dump result in folder
+#!/usr/bin/python3
+# Remove sky from an image database and dump result in folder
+
+import os
+import sys
 
 import cv2
 import navbench as nb
 from navbench import improc as ip
 
-for i in range(0, 1000, 100):
-    path = "datasets/bottom_of_campus/straight_route2_fwd/frame%05i.jpg" % i
-    print(path)
+for dbpath in sys.argv[1:]:
+    db = nb.Database(dbpath)
+    head, tail = os.path.split(dbpath)
+    if tail == '':
+        _, tail = os.path.split(head)
+    new_dpath = tail + '_nosky'
+    if not os.path.exists(new_dpath):
+        os.mkdir(new_dpath)
 
-    im = nb.read_images(path)
-    thresh = ip.remove_sky(im)
-    assert cv2.imwrite("examples/no_sky/frame%05i.jpg" % i, thresh)
+    for fpath in db.entries['filepath']:
+        _, fname = os.path.split(fpath)
+        im = cv2.imread(fpath, cv2.IMREAD_GRAYSCALE)
+        assert im.shape
+        assert cv2.imwrite(os.path.join(new_dpath, fname), ip.remove_sky(im))
