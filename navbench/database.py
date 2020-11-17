@@ -13,6 +13,9 @@ from navbench import improc
 
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
+
+    print('Loading database at %s...' % path)
+
     try:
         df = pd.read_csv(os.path.join(path, "database_entries.csv"))
     except FileNotFoundError:
@@ -87,7 +90,7 @@ class Database:
             print("WARNING: Could not read database_metadata.yaml")
 
         if self.metadata and self.metadata['needsUnwrapping']:
-            print("!!!!! WARNING: This database has not been unwrapped." +
+            print("!!!!! WARNING: This database has not been unwrapped. " +
                   "Analysis may not make sense! !!!!!")
 
     def __len__(self):
