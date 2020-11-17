@@ -63,9 +63,15 @@ class CatchmentArea:
     def size(self):
         return self.bounds[1] - self.bounds[0]
 
-    def plot(self, xs, filter_zeros=True, ymax=None, ax=None):
-        # Check entries is sorted
-        assert all(xs[i] <= xs[i + 1] for i in range(len(xs) - 1))
+    def get_finite_bounds(self):
+        return (max(0, self.bounds[0]), min(len(self.vals) - 1, self.bounds[1]))
+
+    def plot(self, xs=None, filter_zeros=True, ymax=None, ax=None):
+        if xs:
+            # Check entries is sorted
+            assert all(xs[i] <= xs[i + 1] for i in range(len(xs) - 1))
+        else:
+            xs = range(len(self.vals))
 
         if ax is None:
             _, ax = plt.subplots()
