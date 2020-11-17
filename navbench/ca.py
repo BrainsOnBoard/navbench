@@ -46,23 +46,21 @@ class CatchmentArea:
         # A StopIteration error is raised when there are no values for which
         # thresh_fun() == True. In this case the CA extends beyond the lower or
         # upper bounds of the input values and we indicate it by setting the bound
-        # to None.
+        # to +-inf.
         try:
             lower = goal_idx - ca(left)
         except StopIteration:
-            lower = None
+            lower = float('-inf')
         try:
             upper = goal_idx + ca(right)
         except StopIteration:
-            upper = None
+            upper = float('inf')
 
         self.bounds = (lower, upper)
         self.goal_idx = goal_idx
         self.vals = vals
 
     def size(self):
-        if None in self.bounds:
-            return None
         return self.bounds[1] - self.bounds[0]
 
     def plot(self, xs, filter_zeros=True, ymax=None, ax=None):
@@ -84,9 +82,12 @@ class CatchmentArea:
         # Plot unfiltered values
         lines = ax.plot(xs, self.vals)
 
+        # Clamp bounds as they may be +-inf
+        lo = max(0, self.bounds[0])
+        hi = min(len(xs) - 1, self.bounds[1])
+
         # Indicate the CA by plotting a red line over the top
-        ax.plot(xs[self.bounds[0]:self.bounds[1]],
-                self.vals[self.bounds[0]:self.bounds[1]], 'r')
+        ax.plot(xs[lo:hi], self.vals[lo:hi], 'r')
         ax.set_xlim(xs[0], xs[-1])
 
         # Plot dotted lines over the top to show median-filtered values
@@ -94,9 +95,7 @@ class CatchmentArea:
             ax.plot(xs, self.filtered_vals,
                     ':', color=lines[0].get_color())
 
-            ax.plot(xs[self.bounds[0]:self.bounds[1]],
-                    self.filtered_vals[self.bounds[0]:self.bounds[1]], 'r:')
-
+            ax.plot(xs[lo:hi], self.filtered_vals[lo:hi], 'r:')
 
         # Show the goal as a dashed black line
         ymax = ymax or ax.get_ylim()[1]

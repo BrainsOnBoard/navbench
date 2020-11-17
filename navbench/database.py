@@ -95,6 +95,11 @@ class Database:
 
     def distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
+
+        # CA bounds may be infinite so handle this
+        if math.isinf(i) or math.isinf(j):
+            return float('inf')
+
         p1 = (self.entries['x'][i], self.entries['y'][i])
         p2 = (self.entries['x'][j], self.entries['y'][j])
         return np.linalg.norm(np.array(p1) - np.array(p2))

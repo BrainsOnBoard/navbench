@@ -35,13 +35,13 @@ def test_single():
 def test_infinite_left():
     ca = calculate_ca([1, 1, 0, 2, 1])
     assert ca.goal_idx == 2
-    assert ca.bounds == (None, 3)
+    assert ca.bounds == (float('-inf'), 3)
 
 
 def test_infinite_right():
     ca = calculate_ca([1, 2, 0, 1, 1])
     assert ca.goal_idx == 2
-    assert ca.bounds == (1, None)
+    assert ca.bounds == (1, float('inf'))
 
 
 def test_medfilt_right():
