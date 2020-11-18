@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -17,32 +18,29 @@ def euclidean_distance(p1, p2):
 
 
 def mean_absdiff(x, y):
-    """Return mean absolute difference between two images or sets of images
-    (as 3D matrices). """
-    x = to_3d_array(x).astype(np.float)
-    y = to_3d_array(y).astype(np.float)
+    """Return mean absolute difference between two images or sets of images."""
 
-    # Check that the images are of the same size
-    assert x.shape[1:] == y.shape[1:]
+    if isinstance(x, list):
+        x, y = y, x
 
-    absdiffs = np.abs(x - y)
-    return absdiffs.mean(axis=(1, 2))
+    if isinstance(y, list):
+        return [cv2.absdiff(x, im).mean() for im in y]
+
+    return cv2.absdiff(x, y).mean()
 
 
 def ridf(images, snap, step=1):
     assert step > 0
     assert step % 1 == 0
-    images = to_3d_array(images)
-    snap = to_3d_array(snap)
 
-    steps = range(0, images.shape[2], step)
-    diffs = np.empty((len(images), len(steps)), dtype=np.float)
+    num_images = len(images) if isinstance(images, list) else 1
+    steps = range(0, snap.shape[1], step)
+    diffs = np.empty((num_images, len(steps)), dtype=np.float)
     for i, rot in enumerate(steps):
-        rsnap = np.roll(snap, -rot, axis=2)
+        rsnap = np.roll(snap, -rot, axis=1)
         diffs[:, i] = mean_absdiff(images, rsnap)
 
     return diffs if diffs.shape[0] > 1 else diffs[0]
-
 
 def route_idf(images, snap):
     return mean_absdiff(images, snap)
@@ -132,6 +130,7 @@ def plot_ridf(diffs, ax=None, im=None):
     if im is not None:
         ext = (*ax.get_xlim(), *ax.get_ylim())
         ax.imshow(im, cmap='gray', zorder=0, extent=ext)
-        ax.set_aspect((im.shape[0] / im.shape[1]) * ((ext[1] - ext[0]) / (ext[3] - ext[2])))
+        ax.set_aspect((im.shape[0] / im.shape[1]) *
+                      ((ext[1] - ext[0]) / (ext[3] - ext[2])))
 
     return ax
