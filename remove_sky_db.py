@@ -19,6 +19,12 @@ for dbpath in sys.argv[1:]:
 
     for fpath in db.entries['filepath']:
         _, fname = os.path.split(fpath)
-        im = cv2.imread(fpath, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(fpath)
         assert im.shape
-        assert cv2.imwrite(os.path.join(new_dpath, fname), ip.remove_sky(im))
+
+        # Remove sky and histeq
+        im_grey = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+        im_nosky = ip.remove_sky_and_histeq(im_grey)
+
+        # Write frame
+        assert cv2.imwrite(os.path.join(new_dpath, fname), im_nosky)

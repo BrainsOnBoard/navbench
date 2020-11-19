@@ -75,3 +75,8 @@ def remove_sky(im):
     mask = ground_mask(im)
     im = cv2.bitwise_and(im, mask)
     return im
+
+
+def remove_sky_and_histeq(im):
+    mask = ground_mask(im)
+    return cv2.bitwise_and(histeq(im), mask)
