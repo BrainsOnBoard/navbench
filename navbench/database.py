@@ -76,6 +76,7 @@ def read_images(paths, preprocess=None):
 
 class Database:
     def __init__(self, path):
+        self.path = path
         self.entries = nb.read_image_database(path)
 
         metadata_path = os.path.join(path, "database_metadata.yaml")
