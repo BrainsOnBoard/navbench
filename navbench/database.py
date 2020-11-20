@@ -115,6 +115,13 @@ class Database:
             dists.append(dist if i >= ref_entry else -dist)
         return dists
 
+    def get_cumulative_distances(self):
+        distances = [0]
+        for i in range(1, len(self)):
+            dist = self.distance(i - 1, i)
+            distances.append(distances[-1] + dist)
+        return distances
+
     def entry_bounds(self, max_dist, start_entry):
         '''Get upper and lower bounds for frames > max_dist from start frame'''
         upper_entry = start_entry
