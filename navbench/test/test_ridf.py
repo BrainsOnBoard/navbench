@@ -29,5 +29,5 @@ def test_multi():
 
 
 def test_step2():
-    assert (ridf(im0, im0, 2) == [0]).all()
-    assert (ridf(im3, im3, 2) == [0, 1/2]).all()
+    assert (ridf(im0, im0, step=2) == [0]).all()
+    assert (ridf(im3, im3, step=2) == [0, 1/2]).all()

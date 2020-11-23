@@ -15,7 +15,7 @@ def mean_absdiff(x, y):
     return cv2.absdiff(x, y).mean()
 
 
-def __ridf(test_images, ref_image, step):
+def __ridf(test_images, ref_image, difference, step):
     """Internal function; do not use directly"""
     step_max = ref_image.shape[1]
     if step < 0:
@@ -25,12 +25,12 @@ def __ridf(test_images, ref_image, step):
     diffs = np.empty((len(test_images), len(steps)), dtype=np.float)
     for i, rot in enumerate(steps):
         rref = np.roll(ref_image, -rot, axis=1)
-        diffs[:, i] = mean_absdiff(test_images, rref)
+        diffs[:, i] = difference(test_images, rref)
 
     return diffs if diffs.shape[0] > 1 else diffs[0]
 
 
-def ridf(images, snapshots, step=1):
+def ridf(images, snapshots, difference=mean_absdiff, step=1):
     """Return an RIDF for one or more images vs one or more snapshots (as a vector)"""
     assert step > 0
     assert step % 1 == 0
@@ -39,9 +39,9 @@ def ridf(images, snapshots, step=1):
     multi_snaps = isinstance(snapshots, list)
     assert not multi_images or not multi_snaps
     if multi_snaps:
-        return __ridf(snapshots, images, -step)
+        return __ridf(snapshots, images, difference, -step)
 
-    return __ridf(images, snapshots, step)
+    return __ridf(images, snapshots, difference, step)
 
 
 def get_ridf_headings(images, snapshots, step=1):
