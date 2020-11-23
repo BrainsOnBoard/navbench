@@ -29,18 +29,34 @@ def mean_absdiff(x, y):
     return cv2.absdiff(x, y).mean()
 
 
-def ridf(images, snap, step=1):
+def __ridf(test_images, ref_image, step):
+    """Internal function; do not use directly"""
+    step_max = ref_image.shape[1]
+    if step < 0:
+        step_max = -step_max
+    steps = range(0, step_max, step)
+
+    diffs = np.empty((len(test_images), len(steps)), dtype=np.float)
+    for i, rot in enumerate(steps):
+        rref = np.roll(ref_image, -rot, axis=1)
+        diffs[:, i] = mean_absdiff(test_images, rref)
+
+    return diffs if diffs.shape[0] > 1 else diffs[0]
+
+
+def ridf(images, snapshots, step=1):
+    """Return an RIDF for one or more images vs one or more snapshots (as a vector)"""
     assert step > 0
     assert step % 1 == 0
 
-    num_images = len(images) if isinstance(images, list) else 1
-    steps = range(0, snap.shape[1], step)
-    diffs = np.empty((num_images, len(steps)), dtype=np.float)
-    for i, rot in enumerate(steps):
-        rsnap = np.roll(snap, -rot, axis=1)
-        diffs[:, i] = mean_absdiff(images, rsnap)
+    multi_images = isinstance(images, list)
+    multi_snaps = isinstance(snapshots, list)
+    assert not multi_images or not multi_snaps
+    if multi_snaps:
+        return __ridf(snapshots, images, -step)
 
-    return diffs if diffs.shape[0] > 1 else diffs[0]
+    return __ridf(images if multi_images else (images), snapshots, step)
+
 
 def route_idf(images, snap):
     return mean_absdiff(images, snap)
