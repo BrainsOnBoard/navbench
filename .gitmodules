@@ -1,3 +1,6 @@
+[submodule "datasets/ant_world"]
+	path = datasets/ant_world
+	url = ../ant_world_image_databases
 [submodule "datasets/bottom_of_campus"]
 	path = datasets/bottom_of_campus
 	url = ../bottom_of_campus
