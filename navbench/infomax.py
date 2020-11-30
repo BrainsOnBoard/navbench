@@ -2,7 +2,9 @@ import numpy as np
 
 
 class InfoMax:
-    def __init__(self, num_inputs, num_hidden=None, learning_rate=0.000001, seed=None):
+    DEFAULT_LEARNING_RATE = 1e-4
+
+    def __init__(self, num_inputs, num_hidden=None, learning_rate=DEFAULT_LEARNING_RATE, seed=None):
         self.learning_rate = learning_rate
 
         # seed may be None, in which case it'll be initialised by platform
@@ -25,10 +27,9 @@ class InfoMax:
     def train(self, image):
         u = self.weights * image.ravel()
         y = np.tanh(u)
-        lrate = self.learning_rate / u.shape[0]
-        val = (np.eye(self.weights.shape[0]) - (y + u)
-            * np.transpose(u) * self.weights)
-        self.weights += lrate * val
+        weight_update = (np.eye(self.weights.shape[0]) - (y + u)
+                         * np.transpose(u) * self.weights)
+        self.weights += (self.learning_rate / u.shape[0]) * weight_update
         assert not np.isnan(self.weights).any()
 
     def test(self, image):
