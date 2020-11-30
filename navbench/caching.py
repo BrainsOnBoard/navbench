@@ -33,7 +33,10 @@ def cache_result(fn):
         if filename.startswith('<ipython-input'):
             filename = 'ipython'
 
-        cachefile = '%s_%s_%s_cache.pkl' % (filename, fn.__name__, arg_hash)
+        CACHE_PATH = '.navbench_cache'
+        if not os.path.exists(CACHE_PATH):
+            os.mkdir(CACHE_PATH)
+        cachefile = os.path.join(CACHE_PATH, '%s_%s_%s.pkl' % (filename, fn.__name__, arg_hash))
 
         # if cache exists -> load it and return its content
         if os.path.exists(cachefile):
