@@ -1,5 +1,6 @@
 *~
 *.pyc
+*.pkl
 
 # Jupyter Notebook
 .ipynb_checkpoints
