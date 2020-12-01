@@ -22,7 +22,9 @@ class InfoMax:
         # Normalise so that weights.mean() is approx 0 and weights.std() is approx 1
         weights -= weights.mean()
         weights /= weights.std()
-        self.weights = weights
+
+        # Use 32-bit floats for performance
+        self.weights = weights.astype('f')
 
     def train(self, image):
         u = self.weights * image.ravel()
