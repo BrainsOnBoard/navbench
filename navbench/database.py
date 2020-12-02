@@ -82,9 +82,16 @@ class Database:
         for key, value in entries.items():
             setattr(self, key, value)
 
-        # Add these attributes for convenience
         if hasattr(self, "position"):
-            self.x, self.y, self.z = self.position[:, 0], self.position[:, 1], self.position[:, 2]
+            # Add these attributes for convenience
+            self.x = self.position[:, 0]
+            self.y = self.position[:, 1]
+            self.z = self.position[:, 2]
+
+            # Calculate cumulative distance for each point on route
+            elem_dists = [self.calculate_distance(
+                i - 1, i) for i in range(1, len(self))]
+            self.distance = np.cumsum([0, *elem_dists])
 
         metadata_path = os.path.join(path, "database_metadata.yaml")
         try:
@@ -120,6 +127,14 @@ class Database:
             dists.append(dist if i >= ref_entry else -dist)
         return dists
 
+    def calculate_heading_offset(self, distance_thresh):
+        i = 0
+        while self.distance[i] < distance_thresh:
+            i += 1
+
+        dpos = self.position[i, :] - self.position[0, :]
+        return math.atan2(dpos[1], dpos[0])
+
     def entry_bounds(self, max_dist, start_entry):
         '''Get upper and lower bounds for frames > max_dist from start frame'''
         upper_entry = start_entry
@@ -129,13 +144,6 @@ class Database:
         while self.calculate_distance(start_entry, lower_entry) < max_dist:
             lower_entry -= 1
         return (lower_entry, upper_entry)
-
-    def get_cumulative_distances(self):
-        distances = [0]
-        for i in range(1, len(self)):
-            dist = self.calculate_distance(i - 1, i)
-            distances.append(distances[-1] + dist)
-        return distances
 
     def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
