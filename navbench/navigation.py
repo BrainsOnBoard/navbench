@@ -3,20 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def to_3d_array(images):
-    images = np.asarray(images)
-
-    if images.ndim == 3:
-        return images
-    if images.ndim == 2:
-        return images[np.newaxis, :, :]
-    raise ValueError("images must be a 2d or 3d array")
-
-
-def euclidean_distance(p1, p2):
-    return np.linalg.norm(np.array(p1) - np.array(p2))
-
-
 def mean_absdiff(x, y):
     """Return mean absolute difference between two images or sets of images."""
 
