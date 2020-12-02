@@ -104,36 +104,36 @@ class Database:
     def __len__(self):
         return len(self.filepath)
 
-    def distance(self, i, j):
+    def calculate_distance(self, entry1, entry2):
         '''Euclidean distance between two database entries (in m)'''
 
         # CA bounds may be infinite so handle this
-        if math.isinf(i) or math.isinf(j):
+        if math.isinf(entry1) or math.isinf(entry2):
             return float('inf')
 
-        return np.linalg.norm(np.array(self.position[i, 0:2]) - self.position[j, 0:2])
+        return np.linalg.norm(np.array(self.position[entry1, 0:2]) - self.position[entry2, 0:2])
 
-    def distances(self, ref_entry, entries):
+    def calculate_distances(self, ref_entry, entries):
         dists = []
         for i in entries:
-            dist = self.distance(ref_entry, i)
+            dist = self.calculate_distance(ref_entry, i)
             dists.append(dist if i >= ref_entry else -dist)
         return dists
 
     def entry_bounds(self, max_dist, start_entry):
         '''Get upper and lower bounds for frames > max_dist from start frame'''
         upper_entry = start_entry
-        while self.distance(start_entry, upper_entry) < max_dist:
+        while self.calculate_distance(start_entry, upper_entry) < max_dist:
             upper_entry += 1
         lower_entry = start_entry
-        while self.distance(start_entry, lower_entry) < max_dist:
+        while self.calculate_distance(start_entry, lower_entry) < max_dist:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
     def get_cumulative_distances(self):
         distances = [0]
         for i in range(1, len(self)):
-            dist = self.distance(i - 1, i)
+            dist = self.calculate_distance(i - 1, i)
             distances.append(distances[-1] + dist)
         return distances
 
@@ -158,7 +158,7 @@ class Database:
     def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
         (lower, upper) = self.entry_bounds(max_dist, ref_entry)
         entries = range(lower, upper+fr_step, fr_step)
-        dists = self.distances(ref_entry, entries)
+        dists = self.calculate_distances(ref_entry, entries)
 
         # Load snapshot and test images
         snap = self.read_images(ref_entry, preprocess)
