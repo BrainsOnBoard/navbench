@@ -20,7 +20,7 @@ new_dpath = tail + '_nosky'
 if not os.path.exists(new_dpath):
     os.mkdir(new_dpath)
 
-for fpath in db.entries['filepath']:
+for fpath in db.filepath:
     _, fname = os.path.split(fpath)
     im = cv2.imread(fpath)
     assert im.shape

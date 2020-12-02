@@ -12,7 +12,7 @@ dbroot = '../../../datasets/rc_car/Stanmer_park_dataset'
 # Plot UTM coordinates
 def plot_route(ax, dpath):
     db = nb.Database(os.path.join(dbroot, dpath))
-    ax.plot(db.entries['x'], db.entries['y'], ':')
+    ax.plot(db.x, db.y, ':')
 
 def get_dataset_path(date, i):
     return '%s/dataset%d' % (date, i)

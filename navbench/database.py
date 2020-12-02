@@ -37,12 +37,11 @@ def read_image_database(path):
     df = df.rename(columns=lambda x: x.strip())
 
     entries = {
-        "x": df["X [mm]"] / 1000,
-        "y": df["Y [mm]"] / 1000,
-        "z": df["Z [mm]"] / 1000,
+        "position": np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]]).transpose(),
         "heading": df["Heading [degrees]"],
         "filepath": [os.path.join(path, fn.strip()) for fn in df["Filename"]]
     }
+    entries["position"] /= 1000  # Convert to m
 
     return entries
 
@@ -77,7 +76,15 @@ def read_images(paths, preprocess=None):
 class Database:
     def __init__(self, path):
         self.path = path
-        self.entries = nb.read_image_database(path)
+
+        # Turn the elements of the dict into object attributes
+        entries = nb.read_image_database(path)
+        for key, value in entries.items():
+            setattr(self, key, value)
+
+        # Add these attributes for convenience
+        if hasattr(self, "position"):
+            self.x, self.y, self.z = self.position[:, 0], self.position[:, 1], self.position[:, 2]
 
         metadata_path = os.path.join(path, "database_metadata.yaml")
         try:
@@ -95,7 +102,7 @@ class Database:
                   "Analysis may not make sense! !!!!!")
 
     def __len__(self):
-        return len(self.entries["filepath"])
+        return len(self.filepath)
 
     def distance(self, i, j):
         '''Euclidean distance between two database entries (in m)'''
@@ -104,9 +111,7 @@ class Database:
         if math.isinf(i) or math.isinf(j):
             return float('inf')
 
-        p1 = (self.entries['x'][i], self.entries['y'][i])
-        p2 = (self.entries['x'][j], self.entries['y'][j])
-        return np.linalg.norm(np.array(p1) - np.array(p2))
+        return np.linalg.norm(np.array(self.position[i, 0:2]) - self.position[j, 0:2])
 
     def distances(self, ref_entry, entries):
         dists = []
@@ -162,10 +167,8 @@ class Database:
               (lower, upper, len(images)))
 
         # Show which part of route we're testing
-        x = self.entries["x"]
-        y = self.entries["y"]
-        ax[1].plot(x, y, x[lower:upper], y[lower:upper],
-                   x[ref_entry], y[ref_entry], 'ro')
+        ax[1].plot(x, y, self.position[lower:upper, 0], self.position[lower:upper, 1],
+                   self.position[ref_entry, 0], self.position[ref_entry, 1], 'ro')
         ax[1].set_xlabel("x (m)")
         ax[1].set_ylabel("y (m)")
         ax[1].axis("equal")
@@ -189,7 +192,7 @@ class Database:
             # Convert all the images to floats before we use them
             preprocess = (preprocess, improc.to_float)
 
-        paths = self.entries["filepath"]
+        paths = self.filepath
         if not entries is None:  # (otherwise load all images)
             if not isinstance(entries, Iterable):
                 return nb.read_images(paths[entries], preprocess)
