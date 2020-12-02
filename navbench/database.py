@@ -115,13 +115,6 @@ class Database:
             dists.append(dist if i >= ref_entry else -dist)
         return dists
 
-    def get_cumulative_distances(self):
-        distances = [0]
-        for i in range(1, len(self)):
-            dist = self.distance(i - 1, i)
-            distances.append(distances[-1] + dist)
-        return distances
-
     def entry_bounds(self, max_dist, start_entry):
         '''Get upper and lower bounds for frames > max_dist from start frame'''
         upper_entry = start_entry
@@ -132,18 +125,30 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def read_images(self, entries=None, preprocess=None, to_float=True):
-        if to_float:
-            # Convert all the images to floats before we use them
-            preprocess = (preprocess, improc.to_float)
+    def get_cumulative_distances(self):
+        distances = [0]
+        for i in range(1, len(self)):
+            dist = self.distance(i - 1, i)
+            distances.append(distances[-1] + dist)
+        return distances
 
-        paths = self.entries["filepath"]
-        if not entries is None:  # (otherwise load all images)
-            if not isinstance(entries, Iterable):
-                return nb.read_images(paths[entries], preprocess)
+    def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
+        (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
+        entries = range(lower, upper+fr_step, fr_step)
+        snap = self.read_images(ref_entry, preprocess)
+        images = self.read_images(entries, preprocess)
+        print("Testing frames %i to %i (n=%i)" %
+              (lower, upper, len(images)))
+        return (images, snap, entries)
 
-            paths = [paths[entry] for entry in entries]
-        return nb.read_images(paths, preprocess)
+    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
+        (images, snap, entries) = self.load_test_frames(
+            ref_entry, frame_dist, preprocess, fr_step)
+
+        idf_diffs = nb.route_idf(images, snap)
+        ridf_diffs = nb.route_ridf(images, snap, ridf_step)
+        nb.plot_route_idf(entries, idf_diffs, ridf_diffs,
+                          filter_zeros=filter_zeros)
 
     def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
         (lower, upper) = self.entry_bounds(max_dist, ref_entry)
@@ -179,20 +184,15 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
-        (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
-        entries = range(lower, upper+fr_step, fr_step)
-        snap = self.read_images(ref_entry, preprocess)
-        images = self.read_images(entries, preprocess)
-        print("Testing frames %i to %i (n=%i)" %
-              (lower, upper, len(images)))
-        return (images, snap, entries)
+    def read_images(self, entries=None, preprocess=None, to_float=True):
+        if to_float:
+            # Convert all the images to floats before we use them
+            preprocess = (preprocess, improc.to_float)
 
-    def plot_idfs_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
-        (images, snap, entries) = self.load_test_frames(
-            ref_entry, frame_dist, preprocess, fr_step)
+        paths = self.entries["filepath"]
+        if not entries is None:  # (otherwise load all images)
+            if not isinstance(entries, Iterable):
+                return nb.read_images(paths[entries], preprocess)
 
-        idf_diffs = nb.route_idf(images, snap)
-        ridf_diffs = nb.route_ridf(images, snap, ridf_step)
-        nb.plot_route_idf(entries, idf_diffs, ridf_diffs,
-                          filter_zeros=filter_zeros)
+            paths = [paths[entry] for entry in entries]
+        return nb.read_images(paths, preprocess)
