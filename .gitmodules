@@ -1,3 +1,6 @@
+[submodule "c++/bob_robotics"]
+	path = c++/bob_robotics
+	url = ../bob_robotics
 [submodule "datasets/ant_world"]
 	path = datasets/ant_world
 	url = ../ant_world_image_databases
