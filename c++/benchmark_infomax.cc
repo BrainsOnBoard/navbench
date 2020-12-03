@@ -1,8 +1,17 @@
-// Third-party includes
-#include "plog/Log.h"
+#include "common.h"
 
-int bobMain(int, char**)
+// BoB robotics includes
+#define EXPOSE_INFOMAX_INTERNALS
+#include "navigation/infomax.h"
+
+int
+bobMain(int, char **)
 {
-    LOGI << "Hello BoB robotics!";
+    using namespace BoBRobotics::Navigation;
+
+    const auto weights = InfoMax<>::getInitialWeights(ImageSize.area(), ImageSize.area(), 42);
+    InfoMaxRotater<> infomax{ ImageSize, weights };
+    doTest(infomax);
+
     return EXIT_SUCCESS;
 }
