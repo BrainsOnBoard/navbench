@@ -9,7 +9,7 @@ bobMain(int, char **)
     using namespace BoBRobotics::Navigation;
 
     PerfectMemoryRotater<> pm{ ImageSize };
-    doTest(pm);
+    trainAndTest(pm);
 
     return EXIT_SUCCESS;
 }

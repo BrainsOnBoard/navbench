@@ -15,6 +15,9 @@
 static const cv::Size ImageSize{ 90, 25 };
 static const auto DatabaseRoot = BoBRobotics::Path::getProgramDirectory() /
                                  "../datasets/rc_car/Stanmer_park_dataset";
+static const std::vector<std::string> TrainRoutes = { "0511/unwrapped_dataset1",
+                                                      "0511/unwrapped_dataset2" };
+const std::vector<std::string> TestRoutes = { "0511/unwrapped_dataset3" };
 
 void
 loadDatabaseImages(std::vector<cv::Mat> &images,
@@ -29,21 +32,40 @@ loadDatabaseImages(std::vector<cv::Mat> &images,
 
 template<class Algo>
 void
-doTest(Algo &algo)
+doTest(Algo &algo, std::vector<cv::Mat> &testImages, cv::FileStorage &fs)
+{
+    static std::vector<double> headings;
+    headings.clear();
+    BoBRobotics::Stopwatch timer;
+
+    std::cout << "Testing...";
+    timer.start();
+    for (const auto &image : testImages) {
+        const units::angle::degree_t heading = std::get<0>(algo.getHeading(image));
+        headings.push_back(heading.value());
+    }
+    const units::time::millisecond_t testTime = timer.elapsed();
+    std::cout << "Completed in " << testTime << "\n";
+
+    fs << "time_per_image_ms" << testTime.value() / testImages.size()
+       << "headings_deg"
+       << "[" << headings << "]";
+}
+
+template<class Algo>
+void
+trainAndTest(Algo &algo)
 {
     using namespace BoBRobotics;
     using namespace units::time;
 
-    const std::vector<std::string> trainRoutes = { "0511/unwrapped_dataset1",
-                                                   "0511/unwrapped_dataset2" };
     std::vector<cv::Mat> trainImages;
-    for (const auto &route : trainRoutes) {
+    for (const auto &route : TrainRoutes) {
         loadDatabaseImages(trainImages, route);
     }
 
-    const std::vector<std::string> testRoutes = { "0511/unwrapped_dataset3" };
     std::vector<cv::Mat> testImages;
-    for (const auto &route : testRoutes) {
+    for (const auto &route : TestRoutes) {
         loadDatabaseImages(testImages, route);
     }
 
@@ -65,28 +87,16 @@ doTest(Algo &algo)
     fs << "training"
        << "{"
        << "routes"
-       << "[" << trainRoutes << "]"
+       << "[" << TrainRoutes << "]"
        << "time_per_image_ms" << trainTime.value() / trainImages.size()
        << "}";
-
-    std::cout << "Testing...";
-    std::vector<double> headings;
-    timer.start();
-    for (const auto &image : testImages) {
-        const units::angle::degree_t heading = std::get<0>(algo.getHeading(image));
-        headings.push_back(heading.value());
-    }
-    const millisecond_t testTime = timer.elapsed();
-    std::cout << "Completed in " << testTime << "\n";
 
     fs << "testing"
        << "{"
        << "routes"
-       << "[" << testRoutes << "]"
-       << "time_per_image_ms" << testTime.value() / testImages.size()
-       << "headings_deg"
-       << "[" << headings << "]"
-       << "}";
+       << "[" << TestRoutes << "]";
+    doTest(algo, testImages, fs);
+    fs << "}";
 
     fs << "}";
 }

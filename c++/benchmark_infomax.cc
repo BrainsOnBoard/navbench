@@ -11,7 +11,7 @@ bobMain(int, char **)
 
     const auto weights = InfoMax<>::getInitialWeights(ImageSize.area(), ImageSize.area(), 42);
     InfoMaxRotater<> infomax{ ImageSize, weights };
-    doTest(infomax);
+    trainAndTest(infomax);
 
     return EXIT_SUCCESS;
 }
