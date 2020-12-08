@@ -1,4 +1,9 @@
 import numpy as np
+import navbench as nb
+try:
+    import pathos.multiprocessing as mp
+except:
+    print('WARNING: Could not find pathos.multiprocessing module')
 
 
 class InfoMax:
@@ -43,3 +48,23 @@ class InfoMax:
             rot_image = np.roll(image, rot, axis=1)
             vals.append(self.test(rot_image))
         return np.array(vals)
+
+
+@nb.cache_result
+def get_trained_network(training_images, seed, num_hidden=None,
+                        learning_rate=InfoMax.DEFAULT_LEARNING_RATE):
+    num_inputs = training_images[0].size
+    infomax = InfoMax(num_inputs, num_hidden or num_inputs,
+                      learning_rate, seed)
+    for image in training_images:
+        infomax.train(image)
+    return infomax
+
+
+@nb.cache_result
+def get_infomax_headings(ann, images, step=1):
+    def get_heading(image):
+        return nb.ridf_to_radians(ann.ridf(image, step=step))
+
+    headings = mp.Pool().map(get_heading, images)
+    return np.array(headings)
