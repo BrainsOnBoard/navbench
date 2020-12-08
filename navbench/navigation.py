@@ -41,7 +41,18 @@ def ridf(images, snapshots, step=1):
     if multi_snaps:
         return __ridf(snapshots, images, -step)
 
-    return __ridf(images if multi_images else (images), snapshots, step)
+    return __ridf(images if multi_images else(images), snapshots, step)
+
+
+
+def get_ridf_headings(images, snapshots, step=1):
+    heads = []
+    for image in images:
+        diffs = ridf(image, snapshots, step=step)
+        best_over_rot = np.min(diffs, axis=1)
+        best_row = np.argmin(best_over_rot)
+        heads.append(ridf_to_radians(diffs[best_row, :]))
+    return np.array(heads)
 
 
 def route_idf(images, snap):
@@ -56,9 +67,13 @@ def normalise180(ths):
 
 
 def ridf_to_degrees(diffs):
-    bestcols = np.argmin(diffs, axis=1)
-    ths = 360 * bestcols / diffs.shape[1]
-    return normalise180(ths)
+    assert diffs.ndim == 1 or diffs.ndim == 2
+    bestcols = np.argmin(diffs, axis=-1)
+    return 360.0 * bestcols / diffs.shape[-1]
+
+
+def ridf_to_radians(diffs):
+    return np.deg2rad(ridf_to_degrees(diffs))
 
 
 def route_ridf(images, snap, step=1):
