@@ -91,3 +91,6 @@ def dct_hash(im):
     imghash1 = img8 >= median 
     np.asarray(imghash1, dtype=np.uint64)
     return imghash1
+
+def hash_distance(hash1, hash2) :
+    return sum(sum(hash1 ^ hash2))
