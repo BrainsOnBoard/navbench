@@ -93,3 +93,16 @@ def dct_hash(im):
 
 def hash_distance(hash1, hash2) :
     return sum(sum(hash1 ^ hash2))
+
+def hash_distance_vector(hash_list, reference_hash) :
+    ref_list = [] 
+    dist_vector = [] 
+
+    for i in range(0, len(hash_list)) :
+        ref_list.append(reference_hash)
+    np.asarray(ref_list, dtype=np.uint64)
+    xorlist = np.logical_xor(hash_list, ref_list)
+    for i in range(0, len(xorlist)) :
+        dist = sum(sum(xorlist[i]))
+        dist_vector.append(dist)
+    return dist_vector
