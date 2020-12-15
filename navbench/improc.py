@@ -80,3 +80,14 @@ def remove_sky(im):
 def remove_sky_and_histeq(im):
     mask = ground_mask(im)
     return cv2.bitwise_and(histeq(im), mask)
+
+
+def dct_hash(im): 
+    imf = np.float32(im)/255.0
+    dst = cv2.dct(imf)
+    img = np.uint8(dst)*255.0
+    img8 = dst[0:8,0:8]
+    median = np.median(img8)
+    imghash1 = img8 >= median 
+    np.asarray(imghash1, dtype=np.uint64)
+    return imghash1
