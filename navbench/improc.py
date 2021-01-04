@@ -57,9 +57,9 @@ def ground_mask(im):
     # First, roughly threshold image
     im = threshold_otsu(im)
 
-    # Set bottom row to white so that any black bits below skyline will be
-    # filled in
+    # Set top row to black and bottom row to white before we fill
     im[-1, :] = 255
+    im[0, :] = 0
 
     # Fill any black holes
     im = fill_holes(im)
