@@ -44,7 +44,6 @@ def ridf(images, snapshots, step=1):
     return __ridf(images if multi_images else(images), snapshots, step)
 
 
-
 def get_ridf_headings(images, snapshots, step=1):
     heads = []
     for image in images:
