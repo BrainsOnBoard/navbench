@@ -41,7 +41,7 @@ def ridf(images, snapshots, step=1):
     if multi_snaps:
         return __ridf(snapshots, images, -step)
 
-    return __ridf(images if multi_images else(images), snapshots, step)
+    return __ridf(images, snapshots, step)
 
 
 def get_ridf_headings(images, snapshots, step=1):
