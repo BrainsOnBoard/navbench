@@ -59,9 +59,8 @@ def route_idf(images, snap):
 
 
 def normalise180(ths):
-    for idx, th in enumerate(ths):
-        if th > 180:
-            ths[idx] -= 360
+    ths = np.array(ths) % 360
+    ths[ths > 180] -= 360
     return ths
 
 
