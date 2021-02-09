@@ -22,7 +22,7 @@ def __ridf(test_images, ref_image, difference, step):
         step_max = -step_max
     steps = range(0, step_max, step)
 
-    diffs = np.empty((len(test_images), len(steps)), dtype=np.float)
+    diffs = np.empty((len(test_images), len(steps)), dtype=float)
     for i, rot in enumerate(steps):
         rref = np.roll(ref_image, -rot, axis=1)
         diffs[:, i] = difference(test_images, rref)

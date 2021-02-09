@@ -15,11 +15,11 @@ def histeq(im):
 def to_float(im):
     # Normalise values
     info = np.iinfo(im.dtype)
-    return im.astype(np.float) / info.max
+    return im.astype(float) / info.max
 
 
 def add_randomness(im, sigma):
-    assert im.dtype == np.float
+    assert im.dtype == float
     im += sigma * np.random.standard_normal(im.shape)
     return np.clip(im, 0, 1)
 
