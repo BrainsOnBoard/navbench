@@ -32,6 +32,8 @@ def cache_result(fn):
         filename = inspect.stack()[1].filename
         if filename.startswith('<ipython-input'):
             filename = 'ipython'
+        else:
+            filename = os.path.basename(filename)
 
         CACHE_PATH = '.navbench_cache'
         if not os.path.exists(CACHE_PATH):
