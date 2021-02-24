@@ -10,6 +10,6 @@
 [submodule "datasets/rc_car"]
 	path = datasets/rc_car
 	url = ../rc_car_image_databases
-[submodule "datasets/sussex_library_square"]
-	path = datasets/sussex_library_square
+[submodule "datasets/library_square"]
+	path = datasets/library_square
 	url = ../sussex_library_square_data
