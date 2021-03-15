@@ -75,7 +75,7 @@ def ridf_to_radians(diffs):
 
 
 def route_ridf(images, snap, step=1):
-    return np.amin(ridf(images, snap, step), axis=1)
+    return np.amin(ridf(images, snap, step=step), axis=1)
 
 
 def route_ridf_errors(images, snap, step=1):
