@@ -97,31 +97,35 @@ def zeros_to_nones(vals):
     return ret
 
 
-def plot_route_idf(entries, *errs_args, ax=None, filter_zeros=True, labels=None):
+def plot_route_idf(xs, *errs_args, ax=None, filter_zeros=True, xlabel='Frame',
+                   labels=None):
     if not labels:
         labels = len(errs_args[0]) * [None]
 
     if ax is None:
         _, ax = plt.subplots()
 
+    lines = []
     for errs, label in zip(errs_args, labels):
         if filter_zeros:
             errs = zeros_to_nones(errs)
-        ax.plot(entries, errs, label=label)
+        lines.append(ax.plot(xs, errs, label=label)[0])
 
-    ax.set_xlabel("Frame")
-    ax.set_xlim(entries[0], entries[-1])
+    ax.set_xlabel(xlabel)
+    ax.set_xlim(xs[0], xs[-1])
     ax.set_ylabel("Mean image diff (px)")
     ax.set_ylim(bottom=0)
 
     if filter_zeros:
         for errs in errs_args:
-            for entry, val in zip(entries, errs):
+            for entry, val in zip(xs, errs):
                 if val == 0:
                     ax.plot((entry, entry), ax.get_ylim(), 'r:')
 
     if labels[0]:
         ax.legend()
+
+    return lines
 
 
 def plot_ridf(diffs, ax=None, im=None):
