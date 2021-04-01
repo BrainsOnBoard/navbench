@@ -41,7 +41,7 @@ def ridf(images, snapshots, difference=mean_absdiff, step=1):
     if multi_snaps:
         return __ridf(snapshots, images, difference, -step)
 
-    return __ridf([images], snapshots, difference, step)
+    return __ridf(images, snapshots, difference, step)
 
 
 def get_ridf_headings(images, snapshots, step=1):
