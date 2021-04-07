@@ -59,6 +59,9 @@ def route_idf(images, snap):
 
 
 def normalise180(ths):
+    if np.isscalar(ths):
+        return normalise180([ths])[0]
+
     ths = np.array(ths) % 360
     ths[ths > 180] -= 360
     return ths
