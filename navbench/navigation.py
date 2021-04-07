@@ -15,6 +15,11 @@ def mean_absdiff(x, y):
     return cv2.absdiff(x, y).mean()
 
 
+def rotate_pano(image, right_deg):
+    rot_px = int(right_deg * image.shape[1] / 360)
+    return np.roll(image, rot_px, axis=1)
+
+
 def __ridf(test_images, ref_image, difference, step):
     """Internal function; do not use directly"""
     step_max = ref_image.shape[1]
