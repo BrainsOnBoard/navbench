@@ -58,12 +58,14 @@ def apply_functions(im, funs):
     return funs(im)
 
 
-def read_images(paths, preprocess=None):
-    """Returns greyscale image(s) from specified paths."""
-
+def read_images(paths, preprocess=None, greyscale=True):
     # Single string as input
     if isinstance(paths, str):
-        im = cv2.imread(paths, cv2.IMREAD_GRAYSCALE)
+        if greyscale:
+            flags = cv2.IMREAD_GRAYSCALE
+        else:
+            flags = cv2.IMREAD_COLOR
+        im = cv2.imread(paths, flags)
         assert im is not None  # Check im loaded successfully
 
         # Run preprocessing step on images
@@ -72,7 +74,7 @@ def read_images(paths, preprocess=None):
         return im
 
     # Otherwise, we have a collection of paths
-    return [read_images(path, preprocess) for path in paths]
+    return [read_images(path, preprocess, greyscale) for path in paths]
 
 
 class Database:
@@ -197,7 +199,11 @@ class Database:
         ax[0].set_ylabel("Mean image diff (px)")
         ax[0].set_ylim(0, 0.06)
 
-    def read_images(self, entries=None, preprocess=None, to_float=True):
+    def read_images(self, entries=None, preprocess=None, to_float=True, greyscale=True):
+        if not greyscale:
+            # For colour images, it makes more sense to use an RGB colour space in python
+            preprocess = (preprocess, lambda im: cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+
         if to_float:
             # Convert all the images to floats before we use them
             preprocess = (preprocess, improc.to_float)
@@ -205,7 +211,7 @@ class Database:
         paths = self.filepath
         if not entries is None:  # (otherwise load all images)
             if not isinstance(entries, Iterable):
-                return nb.read_images(paths[entries], preprocess)
+                return nb.read_images(paths[entries], preprocess, greyscale)
 
             paths = [paths[entry] for entry in entries]
-        return nb.read_images(paths, preprocess)
+        return nb.read_images(paths, preprocess, greyscale)
