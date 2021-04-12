@@ -80,3 +80,16 @@ def remove_sky(im):
 def remove_sky_and_histeq(im):
     mask = ground_mask(im)
     return cv2.bitwise_and(histeq(im), mask)
+
+
+def mask(mask_filepath, greyscale=True):
+    '''Generate a filter for mask at given filepath'''
+
+    mask = cv2.imread(mask_filepath, cv2.IMREAD_GRAYSCALE)
+    assert mask is not None
+    assert mask.dtype == np.uint8
+    mask = np.where(mask < 128, 0, 255).astype(np.uint8)
+    if not greyscale:
+        mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
+
+    return lambda im: cv2.bitwise_and(im, mask)
