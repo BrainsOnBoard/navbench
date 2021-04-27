@@ -101,7 +101,9 @@ def zeros_to_nones(vals):
         else:
             ret.append(val)
 
-    print('%i zero values (perfect matches?) are not being shown' % zeros)
+    if zeros > 0:
+        print('%i zero values (perfect matches?) are not being shown' % zeros)
+
     return ret
 
 
@@ -155,7 +157,7 @@ def plot_ridf(diffs, ax=None, im=None, adjust_ylim=True, show_minimum=False):
     if adjust_ylim:
         ax.set_ylim(bottom=0)
     ax.set_xticks(range(-180, 181, 45))
-    
+
     if show_minimum:
         idx = np.argmin(diffs)
         ax.plot([xs[idx]] * 2, ax.get_ylim(), 'k--', alpha=0.7)
