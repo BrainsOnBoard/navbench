@@ -37,7 +37,7 @@ def read_image_database(path):
     df = df.rename(columns=lambda x: x.strip())
 
     entries = {
-        "position": np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]]).transpose(),
+        "position": np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]], dtype=float).transpose(),
         "heading": df["Heading [degrees]"],
         "filepath": [os.path.join(path, fn.strip()) for fn in df["Filename"]]
     }
