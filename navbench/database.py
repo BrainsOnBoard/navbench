@@ -179,7 +179,7 @@ class Database:
               (lower, upper, len(images)))
 
         # Show which part of route we're testing
-        ax[1].plot(x, y, self.position[lower:upper, 0], self.position[lower:upper, 1],
+        ax[1].plot(self.x, self.y, self.position[lower:upper, 0], self.position[lower:upper, 1],
                    self.position[ref_entry, 0], self.position[ref_entry, 1], 'ro')
         ax[1].set_xlabel("x (m)")
         ax[1].set_ylabel("y (m)")
