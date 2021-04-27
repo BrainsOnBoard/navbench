@@ -106,7 +106,7 @@ def zeros_to_nones(vals):
 
 
 def plot_route_idf(xs, *errs_args, ax=None, filter_zeros=True, xlabel='Frame',
-                   labels=None):
+                   labels=None, adjust_ylim=True):
     if not labels:
         labels = len(errs_args[0]) * [None]
 
@@ -122,7 +122,8 @@ def plot_route_idf(xs, *errs_args, ax=None, filter_zeros=True, xlabel='Frame',
     ax.set_xlabel(xlabel)
     ax.set_xlim(xs[0], xs[-1])
     ax.set_ylabel("Mean image diff (px)")
-    ax.set_ylim(bottom=0)
+    if adjust_ylim:
+        ax.set_ylim(bottom=0)
 
     if filter_zeros:
         for errs in errs_args:
@@ -136,7 +137,7 @@ def plot_route_idf(xs, *errs_args, ax=None, filter_zeros=True, xlabel='Frame',
     return lines
 
 
-def plot_ridf(diffs, ax=None, im=None):
+def plot_ridf(diffs, ax=None, im=None, adjust_ylim=True, show_minimum=False):
     assert diffs.ndim == 1
 
     # We want the plot to go from -180° to 180°, so we wrap around
@@ -151,8 +152,13 @@ def plot_ridf(diffs, ax=None, im=None):
     xs = np.linspace(-180, 180, len(diffs))
     ax.plot(xs, diffs)
     ax.set_xlim(-180, 180)
-    ax.set_ylim(bottom=0)
+    if adjust_ylim:
+        ax.set_ylim(bottom=0)
     ax.set_xticks(range(-180, 181, 45))
+    
+    if show_minimum:
+        idx = np.argmin(diffs)
+        ax.plot([xs[idx]] * 2, ax.get_ylim(), 'k--', alpha=0.7)
 
     if im is not None:
         ext = (*ax.get_xlim(), *ax.get_ylim())
