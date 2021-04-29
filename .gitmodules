@@ -4,6 +4,9 @@
 [submodule "datasets/bottom_of_campus"]
 	path = datasets/bottom_of_campus
 	url = ../bottom_of_campus
+[submodule "datasets/gantry"]
+	path = datasets/gantry
+	url = ../robot_gantry_matlab
 [submodule "datasets/newton"]
 	path = datasets/newton
 	url = ../newton_agritech_tractor_image_databases
