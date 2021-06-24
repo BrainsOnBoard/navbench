@@ -2,6 +2,14 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+try:
+    import pathos.multiprocessing as mp
+except:
+    mp = None
+    print('WARNING: Could not find pathos.multiprocessing module')
+
+from . import caching
+
 
 def mean_absdiff(x, y):
     """Return mean absolute difference between two images or sets of images."""
@@ -52,14 +60,73 @@ def ridf(images, snapshots, difference=mean_absdiff, step=1):
     return __ridf(images, snapshots, difference, step)
 
 
-def get_ridf_headings(images, snapshots, step=1):
-    heads = []
-    for image in images:
+def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
+    """A version of get_ridf_headings() without on-disk caching of results.
+
+    Parameters are the same as for get_ridf_headings().
+    """
+    if len(images) == 0 or len(snapshots) == 0:
+        return np.array(())
+
+    # Get a heading for a single image
+    def get_heading_for_image(image):
         diffs = ridf(image, snapshots, step=step)
-        best_over_rot = np.min(diffs, axis=1)
-        best_row = np.argmin(best_over_rot)
-        heads.append(ridf_to_radians(diffs[best_row, :]))
-    return np.array(heads)
+        if isinstance(snapshots, list):
+            best_over_rot = np.min(diffs, axis=1)
+            best_row = np.argmin(best_over_rot)
+            diffs = diffs[best_row, :]
+        return ridf_to_radians(diffs)
+
+    def run_serial():
+        return np.array([get_heading_for_image(image) for image in images])
+
+    def run_parallel():
+        with mp.Pool() as pool:
+            return np.array(pool.map(get_heading_for_image, images))
+
+    if parallel is None:
+        # Module not installed
+        if not mp:
+            return run_serial()
+
+        # Process in parallel if we have the module and there is a fair
+        # amount of processing to be done
+        num_ops = len(images) * len(snapshots) * images[0].size
+
+        # This value was determined quasi-experimentally on my home machine -- AD
+        if num_ops >= 120000:
+            return run_parallel()
+        return run_serial()
+
+    if parallel:
+        if mp:
+            return run_parallel()
+
+        print('WARNING: Parallel processing requested but pathos.multiprocessing module is not available')
+
+    return run_serial()
+
+
+@caching.cache_result
+def get_ridf_headings(images, snapshots, step=1, parallel=None):
+    """Get a numpy array of headings computed from multiple images and snapshots
+
+    Parameters
+    ----------
+    images
+        List of test images
+    snapshots
+        List of testing images
+    step
+        Step size for each rotation in pixels
+    parallel
+        Whether to run algorithm in parallel. If omitted, it will be run in
+        parallel according to a heuristic (i.e. if there is enough work)
+
+    Returns:
+        Headings in radians.
+    """
+    return get_ridf_headings_no_cache(images, snapshots, step, parallel)
 
 
 def route_idf(images, snap):
