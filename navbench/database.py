@@ -8,7 +8,7 @@ import pandas as pd
 import yaml
 
 import navbench as nb
-from navbench import improc
+from navbench import imgproc
 
 
 def read_image_database(path):
@@ -206,7 +206,7 @@ class Database:
 
         if to_float:
             # Convert all the images to floats before we use them
-            preprocess = (preprocess, improc.to_float)
+            preprocess = (preprocess, imgproc.to_float)
 
         paths = self.filepath
         if not entries is None:  # (otherwise load all images)

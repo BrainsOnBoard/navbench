@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 import navbench as nb
-from navbench import improc as ip
+from navbench import imgproc as ip
 
 dbpath = '../../../datasets/rc_car/Stanmer_park_dataset/0411/unwrapped_dataset1'
 

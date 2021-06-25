@@ -6,7 +6,7 @@ import sys
 
 import cv2
 import navbench as nb
-from navbench import improc as ip
+from navbench import imgproc as ip
 
 for dbpath in sys.argv[1:]:
     db = nb.Database(dbpath)
