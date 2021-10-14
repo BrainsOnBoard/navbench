@@ -7,7 +7,7 @@ except:
 
 
 class InfoMax:
-    DEFAULT_LEARNING_RATE = 1e-4
+    DEFAULT_LEARNING_RATE = 1e-2
 
     def __init__(self, num_inputs, num_hidden=None, learning_rate=DEFAULT_LEARNING_RATE, seed=None):
         self.learning_rate = learning_rate
@@ -30,17 +30,34 @@ class InfoMax:
 
         # Use 32-bit floats for performance
         self.weights = weights.astype('f')
+        
+        ##Scaling factors
+        #This is to prevent saturation of the tanh function - is essentially a hyperparameter
+        self.tanhScalingFactor=10
+        #Rescales image pixel value from 0 to 255, to 0 to 1
+        #This is a more similar order of magnitude to the weights and prevents the system from exploding to infinity
+        self.greyscaleScalingFactor=255
+        
+        self.imageScaling=self.tanhScalingFactor*self.greyscaleScalingFactor
+        
 
     def train(self, image):
-        u = self.weights * image.ravel()
+        
+        
+        u=np.matmul(self.weights,image.ravel()/self.imageScaling)
+
         y = np.tanh(u)
-        weight_update = (np.eye(self.weights.shape[0]) - (y + u)
-                         * np.transpose(u) * self.weights)
+        
+        Wu= np.matmul(np.transpose(self.weights),(u))
+    
+        weight_update = (self.weights - np.outer((y + u),
+                         Wu))
         self.weights += (self.learning_rate / u.shape[0]) * weight_update
+        
         assert not np.isnan(self.weights).any()
 
     def test(self, image):
-        return np.sum(np.abs(self.weights * image.ravel()))
+        return np.sum(abs(np.matmul(self.weights,image.ravel()/self.imageScaling)))
 
     def ridf(self, image, step=1):
         vals = []
