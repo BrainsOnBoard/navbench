@@ -32,6 +32,7 @@ def fill_holes(im):
     contours, _ = cv2.findContours(im, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return
+    contours = list(contours)
 
     # Find the biggest polygon...
     biggest_idx = np.argmax([cv2.contourArea(cnt) for cnt in contours])
