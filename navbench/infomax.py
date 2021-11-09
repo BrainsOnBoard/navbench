@@ -8,9 +8,13 @@ except:
 
 class InfoMax:
     DEFAULT_LEARNING_RATE = 1e-2
+    DEFAULT_TANH_SCALING_FACTOR= 1e-1
 
-    def __init__(self, num_inputs, num_hidden=None, learning_rate=DEFAULT_LEARNING_RATE, seed=None):
+    def __init__(self, num_inputs, num_hidden=None, learning_rate=DEFAULT_LEARNING_RATE, seed=None,tanh_scaling_factor=DEFAULT_TANH_SCALING_FACTOR):
         self.learning_rate = learning_rate
+
+        #This is to prevent saturation of the tanh function
+        self.tanh_scaling_factor=tanh_scaling_factor
 
         # seed may be None, in which case it'll be initialised by platform
         np.random.seed(seed)
@@ -30,34 +34,21 @@ class InfoMax:
 
         # Use 32-bit floats for performance
         self.weights = weights.astype('f')
-        
-        ##Scaling factors
-        #This is to prevent saturation of the tanh function - is essentially a hyperparameter
-        self.tanhScalingFactor=10
-        #Rescales image pixel value from 0 to 255, to 0 to 1
-        #This is a more similar order of magnitude to the weights and prevents the system from exploding to infinity
-        self.greyscaleScalingFactor=255
-        
-        self.imageScaling=self.tanhScalingFactor*self.greyscaleScalingFactor
-        
 
     def train(self, image):
-        
-        
-        u=np.matmul(self.weights,image.ravel()/self.imageScaling)
-
+        if image.dtype == np.ubyte:
+            image = image.astype('f') / 255
+        assert (np.min(image)>=0 and np.max(image)<=1)
+        u=np.matmul(self.weights,image.ravel()*self.tanh_scaling_factor)
         y = np.tanh(u)
-        
         Wu= np.matmul(np.transpose(self.weights),(u))
-    
         weight_update = (self.weights - np.outer((y + u),
                          Wu))
         self.weights += (self.learning_rate / u.shape[0]) * weight_update
-        
         assert not np.isnan(self.weights).any()
 
     def test(self, image):
-        return np.sum(abs(np.matmul(self.weights,image.ravel()/self.imageScaling)))
+        return np.sum(abs(np.matmul(self.weights,image.ravel())))
 
     def ridf(self, image, step=1):
         vals = []
@@ -65,7 +56,6 @@ class InfoMax:
             rot_image = np.roll(image, rot, axis=1)
             vals.append(self.test(rot_image))
         return np.array(vals)
-
 
 @nb.cache_result
 def get_trained_network(training_images, seed, num_hidden=None,
@@ -76,7 +66,6 @@ def get_trained_network(training_images, seed, num_hidden=None,
     for image in training_images:
         infomax.train(image)
     return infomax
-
 
 @nb.cache_result
 def get_infomax_headings(ann, images, step=1):
