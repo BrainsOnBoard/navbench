@@ -80,6 +80,7 @@ def read_images(paths, preprocess=None, greyscale=True):
 class Database:
     def __init__(self, path):
         self.path = path
+        self.name = os.path.basename(path)
 
         # Turn the elements of the dict into object attributes
         entries = nb.read_image_database(path)
