@@ -4,6 +4,9 @@
 [submodule "datasets/bottom_of_campus"]
 	path = datasets/bottom_of_campus
 	url = ../bottom_of_campus
+[submodule "datasets/ftl"]
+	path = datasets/ftl
+	url = ../sussex-ftl-dataset
 [submodule "datasets/gantry"]
 	path = datasets/gantry
 	url = ../robot_gantry_matlab
