@@ -52,10 +52,10 @@ def set_snapshot(im):
 def show(im):
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-    global lastx, lasty, wantsnap, kbkey, webcam
-    if not webcam:
-        # weirdly, we sometimes initially get images of 640x480 from this
-        # camera, so we have to check!
+    global lastx, lasty, wantsnap, kbkey
+    if do_unwrap:
+        # weirdly, we sometimes initially get images of 640x480 from the old
+        # pixpro cameras, so we have to check!
         if im.shape[:2] == cam_res:
             im = cv2.remap(im, map_x, map_y, cv2.INTER_LINEAR)
 
@@ -180,11 +180,35 @@ figManager.full_screen_toggle()
 # set plotting to interactive mode
 plt.ion()
 
-webcam = len(sys.argv) > 1 and sys.argv[1] == "--webcam"
+use_wifi = False
+if len(sys.argv) > 1:
+    if sys.argv[1] == "wifi":
+        use_wifi = True
+    else:
+        cam_num = int(sys.argv[1])
+else:
+    cam_num = 0
+
+is_pixpro = cam_num > 0  # dumb heuristic
+do_unwrap = use_wifi or is_pixpro
+
 map_x = []
 map_y = []
-if not webcam:
-    cam_res = (1024, 1024)
+
+if use_wifi:
+    # Connect to PixPro over wifi (NB: only works with the old yellow ones!)
+    cap = cv2.VideoCapture('http://172.16.0.254:9176')
+else:
+    print(f'Opening camera #{cam_num}')
+    cap = cv2.VideoCapture(cam_num)
+    assert cap.isOpened()
+
+    if is_pixpro:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1440)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1440)
+
+if do_unwrap:
+    cam_res = (cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     # values taken from pixpro_wifi.yaml in BoB robotics
     unwrap = {'centre': (0.5, 0.524414),
@@ -206,12 +230,6 @@ if not webcam:
 
             map_x[i, j] = centre_pixel[0] - r * np.sin(th)
             map_y[i, j] = centre_pixel[1] + r * np.cos(th)
-
-if webcam:
-    cap = cv2.VideoCapture(0)
-else:
-    # Connect to PixPro over wifi (NB: only works with the old yellow ones!)
-    cap = cv2.VideoCapture('http://172.16.0.254:9176')
 
 while True:
     ret, frame = cap.read()
