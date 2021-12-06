@@ -71,6 +71,9 @@ def get_trained_network(training_images, seed, num_hidden=None,
 def get_infomax_headings(ann, images, step=1):
     def get_heading(image):
         return nb.ridf_to_radians(ann.ridf(image, step=step))
-
-    headings = mp.Pool().map(get_heading, images)
-    return np.array(headings)
+    
+    if not mp:
+        return np.array([get_heading(image) for image in images])
+    else:
+        headings = mp.Pool().map(get_heading, images)
+        return np.array(headings)
