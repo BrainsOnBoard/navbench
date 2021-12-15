@@ -39,8 +39,14 @@ def read_image_database(path):
     entries = {
         "position": np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]], dtype=float).transpose(),
         "heading": df["Heading [degrees]"],
-        "filepath": [os.path.join(path, fn.strip()) for fn in df["Filename"]]
     }
+
+    # Note that there won't be a Filename column in video-type databases
+    if 'Filename' in df:
+        entries["filepath"] = [os.path.join(path, fn.strip()) for fn in df["Filename"]]
+    else:
+        entries["filepath"] = [None] * len(df)
+
     entries["position"] /= 1000  # Convert to m
 
     print('Database contains %d images' % len(entries['filepath']))
@@ -109,7 +115,7 @@ class Database:
             self.metadata = None
             print("WARNING: Could not read database_metadata.yaml")
 
-        if self.metadata and self.metadata['needsUnwrapping']:
+        if self.metadata and 'needsUnwrapping' in self.metadata and self.metadata['needsUnwrapping']:
             print("!!!!! WARNING: This database has not been unwrapped. " +
                   "Analysis may not make sense! !!!!!")
 
