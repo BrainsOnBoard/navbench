@@ -8,13 +8,15 @@ except:
 
 class InfoMax:
     DEFAULT_LEARNING_RATE = 1e-2
-    DEFAULT_TANH_SCALING_FACTOR= 1e-1
+    DEFAULT_TANH_SCALING_FACTOR = 1e-1
 
-    def __init__(self, num_inputs, num_hidden=None, learning_rate=DEFAULT_LEARNING_RATE, seed=None,tanh_scaling_factor=DEFAULT_TANH_SCALING_FACTOR):
+    def __init__(self, num_inputs, num_hidden=None,
+                 learning_rate=DEFAULT_LEARNING_RATE, seed=None,
+                 tanh_scaling_factor=DEFAULT_TANH_SCALING_FACTOR):
         self.learning_rate = learning_rate
 
-        #This is to prevent saturation of the tanh function
-        self.tanh_scaling_factor=tanh_scaling_factor
+        # This is to prevent saturation of the tanh function
+        self.tanh_scaling_factor = tanh_scaling_factor
 
         # seed may be None, in which case it'll be initialised by platform
         np.random.seed(seed)
@@ -38,17 +40,18 @@ class InfoMax:
     def train(self, image):
         if image.dtype == np.ubyte:
             image = image.astype('f') / 255
-        assert (np.min(image)>=0 and np.max(image)<=1)
-        u=np.matmul(self.weights,image.ravel()*self.tanh_scaling_factor)
+        assert (np.min(image) >= 0 and np.max(image) <= 1)
+
+        u = np.matmul(self.weights, image.ravel()*self.tanh_scaling_factor)
         y = np.tanh(u)
-        Wu= np.matmul(np.transpose(self.weights),(u))
+        Wu = np.matmul(np.transpose(self.weights), (u))
         weight_update = (self.weights - np.outer((y + u),
                          Wu))
         self.weights += (self.learning_rate / u.shape[0]) * weight_update
         assert not np.isnan(self.weights).any()
 
     def test(self, image):
-        return np.sum(abs(np.matmul(self.weights,image.ravel())))
+        return np.sum(abs(np.matmul(self.weights, image.ravel())))
 
     def ridf(self, image, step=1):
         vals = []
@@ -56,6 +59,7 @@ class InfoMax:
             rot_image = np.roll(image, rot, axis=1)
             vals.append(self.test(rot_image))
         return np.array(vals)
+
 
 @nb.cache_result
 def get_trained_network(training_images, seed, num_hidden=None,
@@ -67,11 +71,12 @@ def get_trained_network(training_images, seed, num_hidden=None,
         infomax.train(image)
     return infomax
 
+
 @nb.cache_result
 def get_infomax_headings(ann, images, step=1):
     def get_heading(image):
         return nb.ridf_to_radians(ann.ridf(image, step=step))
-    
+
     if not mp:
         return np.array([get_heading(image) for image in images])
     else:
