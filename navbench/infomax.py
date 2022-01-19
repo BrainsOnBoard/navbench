@@ -10,13 +10,23 @@ class InfoMax:
     DEFAULT_LEARNING_RATE = 1e-2
     DEFAULT_TANH_SCALING_FACTOR = 1e-1
 
-    def __init__(self, num_inputs, num_hidden=None,
+    def __init__(self, num_inputs=None, num_hidden=None,
                  learning_rate=DEFAULT_LEARNING_RATE, seed=None,
-                 tanh_scaling_factor=DEFAULT_TANH_SCALING_FACTOR):
+                 tanh_scaling_factor=DEFAULT_TANH_SCALING_FACTOR,
+                 weights=None):
         self.learning_rate = learning_rate
 
         # This is to prevent saturation of the tanh function
         self.tanh_scaling_factor = tanh_scaling_factor
+
+        # User wants to set initial weights explicitly
+        if weights is not None:
+            assert num_inputs is None
+            assert num_hidden is None
+            assert seed is None
+
+            self.weights = np.array(weights).astype('f')
+            return
 
         # seed may be None, in which case it'll be initialised by platform
         np.random.seed(seed)
