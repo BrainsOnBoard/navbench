@@ -90,5 +90,5 @@ def get_infomax_headings(ann, images, step=1):
     if not mp:
         return np.array([get_heading(image) for image in images])
     else:
-        headings = mp.Pool().map(get_heading, images)
-        return np.array(headings)
+        with mp.Pool() as pool:
+            return np.array(pool.map(get_heading, images))
