@@ -11,6 +11,13 @@ import navbench as nb
 from navbench import imgproc
 
 
+def clean_entries(val):
+    val = val.strip()
+    if val == "":
+        return float('nan')
+    else:
+        return float(val)
+
 def read_image_database(path):
     """Read info for image database entries from CSV file."""
 
@@ -35,6 +42,11 @@ def read_image_database(path):
 
     # strip whitespace from column headers
     df = df.rename(columns=lambda x: x.strip())
+
+    # strip whitespace from entries and convert empty strings to NaNs
+    for col in ("X [mm]", "Y [mm]", "Z [mm]"):
+        if df[col].dtype != float:
+            df[col] = df[col].apply(clean_entries)
 
     entries = {
         "position": np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]], dtype=float).transpose(),
