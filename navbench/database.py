@@ -114,7 +114,7 @@ class Database:
             # Calculate cumulative distance for each point on route
             elem_dists = [self.calculate_distance(
                 i - 1, i) for i in range(1, len(self))]
-            self.distance = np.cumsum([0, *elem_dists])
+            self.distance = np.nancumsum([0, *elem_dists])
 
         metadata_path = os.path.join(path, "database_metadata.yaml")
         try:
