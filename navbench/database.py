@@ -18,7 +18,7 @@ def clean_entries(val):
     else:
         return float(val)
 
-def read_image_database(path):
+def read_image_database(path, limits_metres):
     """Read info for image database entries from CSV file."""
 
     print('Loading database at %s...' % path)
@@ -27,6 +27,7 @@ def read_image_database(path):
         df = pd.read_csv(os.path.join(path, "database_entries.csv"))
     except FileNotFoundError:
         print("Warning: No CSV file found for", path)
+        assert limits_metres is None
 
         fnames = [f for f in os.listdir(path) if f.endswith(
             '.png') or f.endswith('.jpg')]
@@ -48,9 +49,30 @@ def read_image_database(path):
         if df[col].dtype != float:
             df[col] = df[col].apply(clean_entries)
 
+    position = np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]], dtype=float).transpose()
+    position /= 1000  # Convert to m
+
+    # Calculate cumulative distance for each point on route
+    elem_dists = np.hypot(np.diff(position[:,0]), np.diff(position[:,1]))
+    distance = np.nancumsum([0, *elem_dists])
+
+    # User has specified limits
+    if limits_metres is not None:
+        assert len(limits_metres) == 2
+        assert limits_metres[0] >= 0
+        assert limits_metres[0] < limits_metres[1]
+        if limits_metres[1] > distance[-1]:
+            print(f'Warning: limit of {limits_metres[1]} is greater than route length of {distance[1]}')
+
+        sel = np.logical_and(distance >= limits_metres[0], distance < limits_metres[1])
+        position = position[sel]
+        distance = distance[sel]
+        df = df[sel]
+
     entries = {
-        "position": np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]], dtype=float).transpose(),
+        "position": position,
         "heading": df["Heading [degrees]"],
+        "distance": distance
     }
 
     # Note that there won't be a Filename column in video-type databases
@@ -96,12 +118,12 @@ def read_images(paths, preprocess=None, greyscale=True):
 
 
 class Database:
-    def __init__(self, path):
+    def __init__(self, path, limits_metres=None):
         self.path = path
         self.name = os.path.basename(path)
 
         # Turn the elements of the dict into object attributes
-        entries = nb.read_image_database(path)
+        entries = nb.read_image_database(path, limits_metres)
         for key, value in entries.items():
             setattr(self, key, value)
 
@@ -110,11 +132,6 @@ class Database:
             self.x = self.position[:, 0]
             self.y = self.position[:, 1]
             self.z = self.position[:, 2]
-
-            # Calculate cumulative distance for each point on route
-            elem_dists = [self.calculate_distance(
-                i - 1, i) for i in range(1, len(self))]
-            self.distance = np.nancumsum([0, *elem_dists])
 
         metadata_path = os.path.join(path, "database_metadata.yaml")
         try:
