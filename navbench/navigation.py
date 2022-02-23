@@ -10,17 +10,34 @@ except:
 
 from . import caching
 
+# Yes, there is np.atleast_3d, but the problem is that it tacks the extra
+# dimension onto the end, whereas we want it to be at the beginning (e.g. you
+# get an array of dims [90, 360, 1] rather than [1, 90, 360])
+def to_images_array(x):
+    x = np.array(x)
+    if x.ndim == 3:
+        return x
+
+    assert x.ndim == 2
+    return np.array([x])
+
 
 def mean_absdiff(x, y):
     """Return mean absolute difference between two images or sets of images."""
+    x = to_images_array(x)
+    y = to_images_array(y)
 
-    if isinstance(x, list):
+    # Either x or y can be 3D, but not both
+    assert len(x) == 1 or len(y) == 1
+
+    if len(x) > 1:
         x, y = y, x
 
-    if isinstance(y, list):
-        return [cv2.absdiff(x, im).mean() for im in y]
+    # Convert back to 2D
+    x = np.squeeze(x, axis=0)
 
-    return cv2.absdiff(x, y).mean()
+    ret = [cv2.absdiff(x, im).mean() for im in y]
+    return ret if len(ret) > 1 else ret[0]
 
 
 def rotate_pano(image, right_deg):
@@ -30,6 +47,9 @@ def rotate_pano(image, right_deg):
 
 def __ridf(test_images, ref_image, difference, step):
     """Internal function; do not use directly"""
+    assert test_images.ndim == 3
+    assert ref_image.ndim == 2
+
     step_max = ref_image.shape[1]
     if step < 0:
         step_max = -step_max
@@ -47,17 +67,17 @@ def ridf(images, snapshots, difference=mean_absdiff, step=1):
     """Return an RIDF for one or more images vs one or more snapshots (as a vector)"""
     assert step > 0
     assert step % 1 == 0
+    images = to_images_array(images)
+    snapshots = to_images_array(snapshots)
+    if len(images) == 0 or len(snapshots) == 0:
+        return []
 
-    multi_images = isinstance(images, list)
-    multi_snaps = isinstance(snapshots, list)
-    assert not multi_images or not multi_snaps
-    if multi_snaps:
-        return __ridf(snapshots, images, difference, -step)
+    assert len(images) == 1 or len(snapshots) == 1
 
-    if not multi_images:
-        images = [images]
+    if len(snapshots) > 1:
+        return __ridf(snapshots, images[0], difference, -step)
 
-    return __ridf(images, snapshots, difference, step)
+    return __ridf(images, snapshots[0], difference, step)
 
 
 def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
@@ -65,13 +85,13 @@ def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
 
     Parameters are the same as for get_ridf_headings().
     """
-    if len(images) == 0 or len(snapshots) == 0:
-        return np.array(())
+    images = to_images_array(images)
+    snapshots = to_images_array(snapshots)
 
     # Get a heading for a single image
     def get_heading_for_image(image):
         diffs = ridf(image, snapshots, step=step)
-        if isinstance(snapshots, list):
+        if len(snapshots) > 1:
             best_over_rot = np.min(diffs, axis=1)
             best_row = np.argmin(best_over_rot)
             diffs = diffs[best_row, :]
