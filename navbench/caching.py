@@ -5,7 +5,7 @@ import hashlib
 import inspect
 import os
 import pickle
-from time import time
+from time import perf_counter
 from warnings import warn
 
 _caching_enabled = True
@@ -59,9 +59,9 @@ def cache_result(fn):
 
         # execute the function with all arguments passed
         print('Starting %s()...' % fn.__name__)
-        t0 = time()
+        t0 = perf_counter()
         res = fn(*args, **kwargs)
-        elapsed = time() - t0
+        elapsed = perf_counter() - t0
         print('%s() took %g s to run (without caching)' % (fn.__name__, elapsed))
 
         # write to cache file
