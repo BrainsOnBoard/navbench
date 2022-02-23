@@ -18,25 +18,27 @@ def clean_entries(val):
     else:
         return float(val)
 
-def read_image_database(path, limits_metres):
+def read_image_database(csvPath, limits_metres):
     """Read info for image database entries from CSV file."""
+    csvPath = os.path.realpath(csvPath)
+    dbDir = os.path.dirname(csvPath)
 
-    print('Loading database at %s...' % path)
+    print('Loading database at %s...' % dbDir)
 
     try:
-        df = pd.read_csv(os.path.join(path, "database_entries.csv"))
+        df = pd.read_csv(csvPath)
     except FileNotFoundError:
-        print("Warning: No CSV file found for", path)
+        print("Warning: No CSV file found for", dbDir)
         assert limits_metres is None
 
-        fnames = [f for f in os.listdir(path) if f.endswith(
+        fnames = [f for f in os.listdir(dbDir) if f.endswith(
             '.png') or f.endswith('.jpg')]
 
         # If there's no CSV file then just treat all the files in the folder as
         # separate entries. Note that the files will be in alphabetical order,
         # which may not be what you want!
         entries = {
-            "filepath": sorted([os.path.join(path, f) for f in fnames])
+            "filepath": sorted([os.path.join(dbDir, f) for f in fnames])
         }
 
         return entries
@@ -77,7 +79,7 @@ def read_image_database(path, limits_metres):
 
     # Note that there won't be a Filename column in video-type databases
     if 'Filename' in df:
-        entries["filepath"] = [os.path.join(path, fn.strip()) for fn in df["Filename"]]
+        entries["filepath"] = [os.path.join(dbDir, fn.strip()) for fn in df["Filename"]]
     else:
         entries["filepath"] = [None] * len(df)
 
@@ -118,12 +120,12 @@ def read_images(paths, preprocess=None, greyscale=True):
 
 
 class Database:
-    def __init__(self, path, limits_metres=None):
+    def __init__(self, path, limits_metres=None, csvFileName='database_entries.csv'):
         self.path = path
         self.name = os.path.basename(path)
 
         # Turn the elements of the dict into object attributes
-        entries = nb.read_image_database(path, limits_metres)
+        entries = nb.read_image_database(os.path.join(path, csvFileName), limits_metres)
         for key, value in entries.items():
             setattr(self, key, value)
 
