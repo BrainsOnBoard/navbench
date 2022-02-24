@@ -13,6 +13,14 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "route_quiver.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/analysis/rc_car_big/route_quiver.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
             "name": "view_ridf.py",
             "type": "python",
             "request": "launch",

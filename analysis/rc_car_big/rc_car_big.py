@@ -11,4 +11,4 @@ def get_paths():
     return glob(os.path.join(DBROOT, 'unwrapped_*'))
 
 def load_databases(paths=get_paths(), limits_metres=None):
-    return [nb.Database(path, limits_metres) for path in paths]
+    return [nb.Database(path, limits_metres, 'database_entries_processed.csv') for path in paths]
