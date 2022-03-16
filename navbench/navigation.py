@@ -136,7 +136,7 @@ def get_ridf_headings(images, snapshots, step=1, parallel=None):
     images
         List of test images
     snapshots
-        List of testing images
+        List of training images
     step
         Step size for each rotation in pixels
     parallel
