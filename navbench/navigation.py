@@ -126,6 +126,58 @@ def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
 
     return run_serial()
 
+def _get_ridf_headings_and_snap(images, snapshots, step=1, parallel=None):
+    """A version of get_ridf_headings() without on-disk caching of results.
+
+    Parameters are the same as for get_ridf_headings().
+    """
+    images = to_images_array(images)
+    snapshots = to_images_array(snapshots)
+
+    # Get a heading for a single image
+    def get_heading_for_image(image):
+        diffs = ridf(image, snapshots, step=step)
+        if len(snapshots) > 1:
+            best_over_rot = np.min(diffs, axis=1)
+            best_snap = np.argmin(best_over_rot)
+            diffs = diffs[best_snap, :]
+        else:
+            best_snap = 0
+        return ridf_to_radians(diffs), best_snap
+
+    def run_serial():
+        return [get_heading_for_image(image) for image in images]
+
+    def run_parallel():
+        with mp.Pool() as pool:
+            return pool.map(get_heading_for_image, images)
+
+    if parallel is None:
+        # Module not installed
+        if not mp:
+            return run_serial()
+
+        # Process in parallel if we have the module and there is a fair
+        # amount of processing to be done
+        num_ops = len(images) * len(snapshots) * images[0].size
+
+        # This value was determined quasi-experimentally on my home machine -- AD
+        if num_ops >= 120000:
+            return run_parallel()
+        return run_serial()
+
+    if parallel:
+        if mp:
+            return run_parallel()
+
+        print('WARNING: Parallel processing requested but pathos.multiprocessing module is not available')
+
+    return run_serial()
+
+@caching.cache_result
+def get_ridf_headings_and_snap(*args, **kwargs):
+    arr = _get_ridf_headings_and_snap(*args, **kwargs)
+    return [val[0] for val in arr], [val[1] for val in arr]
 
 @caching.cache_result
 def get_ridf_headings(images, snapshots, step=1, parallel=None):
