@@ -18,7 +18,39 @@ def clean_entries(val):
     else:
         return float(val)
 
-def read_image_database(csvPath, limits_metres):
+
+def interpolate_nan_entries(ts, position):
+    def is_idx_nan(idx):
+        return np.isnan(position[idx, 0])
+
+    # FIXME
+    assert not is_idx_nan(0)
+
+    i = j = 0
+    while i < len(position):
+        j = i + 1
+        while j < len(position) and is_idx_nan(j):
+            j += 1
+
+        # If there are trailing NaN entries, fill them with the contents of the
+        # final valid entry
+        if j == len(position):
+            position[i + 1:, :] = position[i, :]
+            break
+
+        t_range = ts[j] - ts[i]
+        for k in range(i + 1, j):
+            t_prop = (ts[k] - ts[i]) / t_range
+            assert t_prop > 0 and t_prop < 1
+            position[k, :] = position[i, :] + t_prop * (position[j, :] - position[i, :])
+
+        i = j
+
+    # Sanity check
+    assert not np.any(np.isnan(position))
+
+
+def read_image_database(csvPath, limits_metres, interpolate_xy):
     """Read info for image database entries from CSV file."""
     csvPath = os.path.realpath(csvPath)
     dbDir = os.path.dirname(csvPath)
@@ -51,11 +83,18 @@ def read_image_database(csvPath, limits_metres):
         if df[col].dtype != float:
             df[col] = df[col].apply(clean_entries)
 
-    position = np.array([df["X [mm]"], df["Y [mm]"], df["Z [mm]"]], dtype=float).transpose()
+    position = np.array(
+        [df["X [mm]"],
+         df["Y [mm]"],
+         df["Z [mm]"]],
+        dtype=float).transpose()
     position /= 1000  # Convert to m
 
+    if interpolate_xy:
+        interpolate_nan_entries(df['Timestamp [ms]'], position)
+
     # Calculate cumulative distance for each point on route
-    elem_dists = np.hypot(np.diff(position[:,0]), np.diff(position[:,1]))
+    elem_dists = np.hypot(np.diff(position[:, 0]), np.diff(position[:, 1]))
     distance = np.nancumsum([0, *elem_dists])
 
     # User has specified limits
@@ -120,12 +159,16 @@ def read_images(paths, preprocess=None, greyscale=True):
 
 
 class Database:
-    def __init__(self, path, limits_metres=None, csvFileName='database_entries.csv'):
+    def __init__(
+            self, path, limits_metres=None, interpolate_xy=False,
+            csvFileName='database_entries.csv'):
         self.path = path
         self.name = os.path.basename(path)
 
         # Turn the elements of the dict into object attributes
-        entries = nb.read_image_database(os.path.join(path, csvFileName), limits_metres)
+        entries = nb.read_image_database(
+            os.path.join(path, csvFileName),
+            limits_metres, interpolate_xy)
         for key, value in entries.items():
             setattr(self, key, value)
 
