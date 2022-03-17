@@ -23,6 +23,13 @@ train_entries = get_valid_entries(train_route, TRAIN_SKIP)
 train_images = train_route.read_images(train_entries, to_float=TO_FLOAT)
 print(f'Training images: {len(train_images)}')
 
+_, ax = plt.subplots()
+ax.plot(train_route.x, train_route.y)
+
+# TODO: Could do e.g. medianfilt over these headings
+gps_headings = np.arctan2(np.diff(train_route.y), np.diff(train_route.x))
+np.append(gps_headings, [gps_headings[-1]])
+snapshot_headings = gps_headings[train_entries]
 
 for test_route in test_routes:
     test_entries = get_valid_entries(test_route, TEST_SKIP)
@@ -30,16 +37,20 @@ for test_route in test_routes:
 
     print(f'Test images: {len(test_images)}')
 
-    headings = nb.get_ridf_headings(test_images, train_images)
-    headings += heading_offset
+    headings, best_snaps = nb.get_ridf_headings_and_snap(test_images, train_images)
+    headings += snapshot_headings[best_snaps]
 
-    plt.plot(train_route.x, train_route.y)
-    lines = plt.plot(test_route.x, test_route.y, '--')
+    lines = ax.plot(test_route.x, test_route.y, '--', label=test_route.name.replace('unwrapped_',''))
     colour = lines[0].get_color()
-    plt.plot(test_route.x[0], test_route.y[0], 'o', color=colour)
+    ax.plot(test_route.x[0], test_route.y[0], 'o', color=colour)
 
-    u = np.cos(headings)
-    v = np.sin(headings)
-    plt.quiver(test_route.x[test_entries], test_route.y[test_entries], u, v, color=colour, angles='xy', scale=60, zorder=float('inf'), alpha=0.8)
+    nb.anglequiver(
+        ax,
+        test_route.x[test_entries],
+        test_route.y[test_entries],
+        headings, color=colour, zorder=float('inf'), scale=300, scale_units='xy',
+        alpha=0.8)
+
+ax.legend()
 plt.axis('equal')
 plt.show()
