@@ -230,6 +230,14 @@ class Database:
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
+    def get_nearest_entries(self, x, y):
+        diff_x = np.atleast_2d(self.x) - np.atleast_2d(x).T
+        diff_y = np.atleast_2d(self.y) - np.atleast_2d(y).T
+        distances = np.hypot(diff_x, diff_y)
+        nearest = np.argmin(distances, axis=1)
+        assert len(nearest) == len(x)
+        return nearest
+
     def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
