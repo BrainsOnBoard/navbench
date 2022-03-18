@@ -23,8 +23,10 @@ train_entries = get_valid_entries(train_route, TRAIN_SKIP)
 train_images = train_route.read_images(train_entries, to_float=TO_FLOAT)
 print(f'Training images: {len(train_images)}')
 
-_, ax = plt.subplots()
-ax.plot(train_route.x, train_route.y)
+_, ax0 = plt.subplots()
+ax0.plot(train_route.x, train_route.y)
+
+_, ax1 = plt.subplots()
 
 # TODO: Could do e.g. medianfilt over these headings
 gps_headings = np.arctan2(np.diff(train_route.y), np.diff(train_route.x))
@@ -40,17 +42,27 @@ for test_route in test_routes:
     headings, best_snaps = nb.get_ridf_headings_and_snap(test_images, train_images)
     headings += snapshot_headings[best_snaps]
 
-    lines = ax.plot(test_route.x, test_route.y, '--', label=test_route.name.replace('unwrapped_',''))
+    label = test_route.name.replace('unwrapped_','')
+    lines = ax0.plot(test_route.x, test_route.y, '--', label=label)
     colour = lines[0].get_color()
-    ax.plot(test_route.x[0], test_route.y[0], 'o', color=colour)
+    ax0.plot(test_route.x[0], test_route.y[0], 'o', color=colour)
 
     nb.anglequiver(
-        ax,
+        ax0,
         test_route.x[test_entries],
         test_route.y[test_entries],
         headings, color=colour, zorder=float('inf'), scale=300, scale_units='xy',
         alpha=0.8)
 
-ax.legend()
-plt.axis('equal')
+    nearest = train_route.get_nearest_entries(test_route.x[test_entries], test_route.y[test_entries])
+    target_headings = gps_headings[nearest]
+    heading_error = np.abs(nb.normalise180(np.rad2deg(target_headings - headings)))
+    ax1.plot(train_route.distance[nearest], heading_error, label=label)
+    ax1.set_xlabel("Distance along training route (m)")
+    ax1.set_ylabel("Heading error (°)")
+
+ax0.axis('equal')
+ax0.legend()
+ax1.legend()
+
 plt.show()
