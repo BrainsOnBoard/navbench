@@ -28,7 +28,7 @@ ax.plot(train_route.x, train_route.y)
 
 # TODO: Could do e.g. medianfilt over these headings
 gps_headings = np.arctan2(np.diff(train_route.y), np.diff(train_route.x))
-np.append(gps_headings, [gps_headings[-1]])
+gps_headings = np.append(gps_headings, [gps_headings[-1]])
 snapshot_headings = gps_headings[train_entries]
 
 for test_route in test_routes:
