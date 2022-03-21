@@ -2,12 +2,13 @@
 import rc_car_big
 import matplotlib.pyplot as plt
 import navbench as nb
+import numpy as np
 
 TRAIN_SKIP = 40
 TEST_SKIP = 40
 
 paths = rc_car_big.get_paths()
-dbs = rc_car_big.load_databases(paths[0:6], limits_metres=(0, 100))
+dbs = rc_car_big.load_databases(paths)
 
 train_route = dbs[0]
 test_routes = dbs[1:]
@@ -33,12 +34,17 @@ for test_route in test_routes:
         headings, color=colour, zorder=lines[0].zorder + 1, scale=300, scale_units='xy',
         alpha=0.8)
 
-    ax1.plot(train_route.distance[nearest_train_entries], heading_error, label=label)
+    # Cap at 90°
+    heading_error = np.minimum(heading_error, 90)
+    ax1.scatter(train_route.distance[nearest_train_entries], heading_error,
+                label=label, alpha=0.5, marker='.')
     ax1.set_xlabel("Distance along training route (m)")
     ax1.set_ylabel("Heading error (°)")
 
-ax0.axis('equal')
 ax0.legend()
 ax1.legend()
+ax0.axis('equal')
+ax1.set_xlim(left=0)
+ax1.set_ylim(bottom=0)
 
 plt.show()
