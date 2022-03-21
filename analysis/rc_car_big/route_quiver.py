@@ -30,7 +30,7 @@ for test_route in test_routes:
         ax0,
         test_route.x[test_entries],
         test_route.y[test_entries],
-        headings, color=colour, zorder=float('inf'), scale=300, scale_units='xy',
+        headings, color=colour, zorder=lines[0].zorder + 1, scale=300, scale_units='xy',
         alpha=0.8)
 
     ax1.plot(train_route.distance[nearest_train_entries], heading_error, label=label)
