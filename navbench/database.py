@@ -80,7 +80,7 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
 
     # strip whitespace from entries and convert empty strings to NaNs
     for col in ("X [mm]", "Y [mm]", "Z [mm]"):
-        if df[col].dtype != float:
+        if df[col].dtype == str:
             df[col] = df[col].apply(clean_entries)
 
     position = np.array(
