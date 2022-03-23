@@ -22,11 +22,12 @@ def get_valid_entries(db, skip):
     return lst[::skip]
 
 class Analysis:
-    def __init__(self, train_route, x, y, train_skip, to_float=False):
+    def __init__(self, train_route : nb.Database, x, y, train_skip, to_float=False, preprocess=None):
         self.train_route = train_route
         self.train_entries = get_valid_entries(train_route, train_skip)
-        self.train_images = train_route.read_images(self.train_entries, to_float=to_float)
+        self.train_images = train_route.read_images(self.train_entries, to_float=to_float, preprocess=preprocess)
         self.to_float = to_float
+        self.preprocess = preprocess
 
         # TODO: Could do e.g. medianfilt over these headings
         self.train_headings_all = np.arctan2(np.diff(y), np.diff(x))
@@ -37,7 +38,7 @@ class Analysis:
 
     def get_headings(self, test_route, test_skip):
         test_entries = get_valid_entries(test_route, test_skip)
-        test_images = test_route.read_images(test_entries, to_float=self.to_float)
+        test_images = test_route.read_images(test_entries, to_float=self.to_float, preprocess=self.preprocess)
         print(f'Test images: {len(test_images)}')
 
         headings, best_snaps = nb.get_ridf_headings_and_snap(test_images, self.train_images)
