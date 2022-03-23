@@ -1,11 +1,14 @@
 import json
 import os
 import urllib
-from warnings import warn
 
 import appdirs  # For finding cache dir
 import googlemaps
+import numpy as np
 import PIL
+
+from . import coords
+
 
 class APIClient:
     cache_path = appdirs.user_cache_dir('gm_plotting')
@@ -48,3 +51,29 @@ class APIClient:
                     file.write(data)
 
         return PIL.Image.open(filepath)
+
+    def add_satellite_image_background(self, ax):
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        mlat = np.mean(ylim)
+        mlon = np.mean(xlim)
+
+        mframe = 1.25 * 2.0 ** -np.arange(22)
+        def contains_lims(mframe):
+            return xlim[0] >= mlon - mframe and xlim[1] <= mlon + mframe and ylim[0] >= mlat - mframe and ylim[1] <= mlat + mframe
+
+        # Get highest zoom level which includes whole plot
+        zoom = len(mframe) - next(i for i, mf in enumerate(reversed(mframe), 1) if contains_lims(mf))
+        mframe = mframe[zoom]
+
+        # Get satellite image for these coordinates
+        centre_gps = coords.merc_to_gps(mlat, mlon)
+        img = self.get_satellite_image(centre_gps, zoom=zoom)
+
+        # Calculate boundaries for background image
+        extent = (mlon - mframe, mlon + mframe, mlat + mframe, mlat - mframe)
+        ax.imshow(img, extent=extent, zorder=-np.inf)
+
+        # Put back axis limits as they were. Note that y direction is reversed.
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim[::-1])
