@@ -1,17 +1,29 @@
-import sys
-sys.path.append('../..')
-
-import navbench as nb
 import os
-from glob import glob
-DBROOT = '../../datasets/rc_car/rc_car_big'
-paths = glob(os.path.join(DBROOT, 'unwrapped_*'))
-dbs = [nb.Database(path) for path in paths]
+ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+import sys
+sys.path.append(ROOT)
 
+import gm_plotting
+import rc_car_big
 import matplotlib.pyplot as plt
+
+
+# **YUCK**: We forgot to save this in our CSV files
+UTM_ZONE = (30, 'U')
+
+paths = rc_car_big.get_paths()
+dbs = rc_car_big.load_databases(paths)
+
+client = gm_plotting.APIClient()
+
+_, ax = plt.subplots()
 for db in dbs:
-    plt.plot(db.x, db.y, alpha=0.5)
-plt.axis('equal')
+    mlat, mlon = gm_plotting.utm_to_merc(db.x * 1000, db.y * 1000, *UTM_ZONE)
+    ax.plot(mlon, mlat, alpha=0.7)
+ax.axis('equal')
 names = [db.name.replace("unwrapped_", "") for db in dbs]
-plt.legend(names)
+ax.legend(names)
+
+client.add_satellite_image_background(ax)
+
 plt.show()
