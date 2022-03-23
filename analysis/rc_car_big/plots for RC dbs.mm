@@ -2,16 +2,16 @@
 <!--To view this file, download free mind mapping software Freeplane from https://www.freeplane.org -->
 <node TEXT="plots for RC dbs" FOLDED="false" ID="ID_696401721" CREATED="1610381621824" MODIFIED="1646043346419" STYLE="oval">
 <font SIZE="18"/>
-<hook NAME="AutomaticEdgeColor" COUNTER="8" RULE="ON_BRANCH_CREATION"/>
+<hook NAME="AutomaticEdgeColor" COUNTER="9" RULE="ON_BRANCH_CREATION"/>
 <hook NAME="MapStyle">
-    <properties edgeColorConfiguration="#808080ff,#ff0000ff,#0000ffff,#00ff00ff,#ff00ffff,#00ffffff,#7c0000ff,#00007cff,#007c00ff,#7c007cff,#007c7cff,#7c7c00ff" associatedTemplateLocation="template:/standard-1.6.mm" followedTemplateLocation="template:/standard-1.6.mm" followedMapLastTime="1646511578000" fit_to_viewport="false"/>
+    <properties edgeColorConfiguration="#808080ff,#ff0000ff,#0000ffff,#00ff00ff,#ff00ffff,#00ffffff,#7c0000ff,#00007cff,#007c00ff,#7c007cff,#007c7cff,#7c7c00ff" associatedTemplateLocation="template:/standard-1.6.mm" followedTemplateLocation="template:/standard-1.6.mm" followedMapLastTime="1647966556000" fit_to_viewport="false"/>
 
 <map_styles>
 <stylenode LOCALIZED_TEXT="styles.root_node" STYLE="oval" UNIFORM_SHAPE="true" VGAP_QUANTITY="24 pt">
 <font SIZE="24"/>
 <stylenode LOCALIZED_TEXT="styles.predefined" POSITION="right" STYLE="bubble">
 <stylenode LOCALIZED_TEXT="default" ID="ID_271890427" ICON_SIZE="12 pt" COLOR="#000000" STYLE="fork">
-<arrowlink SHAPE="CUBIC_CURVE" COLOR="#000000" WIDTH="2" TRANSPARENCY="200" DASH="" FONT_SIZE="9" FONT_FAMILY="SansSerif" DESTINATION="ID_271890427" STARTARROW="DEFAULT" ENDARROW="NONE"/>
+<arrowlink SHAPE="CUBIC_CURVE" COLOR="#000000" WIDTH="2" TRANSPARENCY="200" DASH="" FONT_SIZE="9" FONT_FAMILY="SansSerif" DESTINATION="ID_271890427" STARTARROW="NONE" ENDARROW="DEFAULT"/>
 <font NAME="SansSerif" SIZE="10" BOLD="false" ITALIC="false"/>
 <richcontent CONTENT-TYPE="plain/auto" TYPE="DETAILS"/>
 <richcontent TYPE="NOTE" CONTENT-TYPE="plain/auto"/>
@@ -118,6 +118,15 @@
 <edge COLOR="#00007c"/>
 <node TEXT="filter out sky" ID="ID_1365731425" CREATED="1646044012846" MODIFIED="1646044015067"/>
 <node TEXT="etc." ID="ID_1101086474" CREATED="1646045163184" MODIFIED="1646045163955"/>
+</node>
+<node TEXT="new todo list" POSITION="right" ID="ID_1537672976" CREATED="1648056306543" MODIFIED="1648056312207">
+<edge COLOR="#7c007c"/>
+<node TEXT="pick positions where GPS is definitely good and check that the headings are good" ID="ID_1076913655" CREATED="1648056312213" MODIFIED="1648056371037">
+<node TEXT="e.g. GPS quality" ID="ID_1104818359" CREATED="1648056371046" MODIFIED="1648056376431"/>
+</node>
+<node TEXT="bad positions:" ID="ID_1026000879" CREATED="1648056477038" MODIFIED="1648056479983">
+<node TEXT="plot: view + snap + diff + ridf and then also do for &quot;nearest&quot; snapshot" ID="ID_479934798" CREATED="1648056479988" MODIFIED="1648056541763"/>
+</node>
 </node>
 </node>
 </map>
