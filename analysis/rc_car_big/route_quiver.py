@@ -1,4 +1,10 @@
 # %%
+import os
+ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+import sys
+sys.path.append(ROOT)
+
+import gm_plotting
 import rc_car_big
 import matplotlib.pyplot as plt
 import navbench as nb
@@ -8,30 +14,38 @@ TRAIN_SKIP = 40
 TEST_SKIP = 40
 
 paths = rc_car_big.get_paths()
-dbs = rc_car_big.load_databases(paths)
+dbs = rc_car_big.load_databases(paths[0:4])  #, limits_metres=(0, 200))
 
 train_route = dbs[0]
 test_routes = dbs[1:]
 
-analysis = rc_car_big.Analysis(train_route, TRAIN_SKIP)
+def to_merc(db):
+    # TODO: Fix up datasets properly
+    mlat, mlon = gm_plotting.utm_to_merc(db.x * 1000, db.y * 1000, 30, 'U')
 
+    # Convert to x, y
+    return mlon, mlat
+
+train_x, train_y = to_merc(train_route)
+analysis = rc_car_big.Analysis(train_route, train_x, train_y, TRAIN_SKIP)
 _, ax0 = plt.subplots()
-ax0.plot(train_route.x, train_route.y)
+ax0.plot(train_x, train_y, label='Training route')
 _, ax1 = plt.subplots()
 
 for test_route in test_routes:
-    test_entries, headings, nearest_train_entries, heading_error = analysis.get_headings(test_route, TEST_SKIP)
+    test_entries, headings, nearest_train_entries, heading_error = analysis.get_headings(
+        test_route, TEST_SKIP)
 
-    label = test_route.name.replace('unwrapped_','')
-    lines = ax0.plot(test_route.x, test_route.y, '--', label=label)
+    label = test_route.name.replace('unwrapped_', '')
+    x, y = to_merc(test_route)
+    lines = ax0.plot(x, y, '--', label=label)
     colour = lines[0].get_color()
-    ax0.plot(test_route.x[0], test_route.y[0], 'o', color=colour)
+    ax0.plot(x[0], y[0], 'o', color=colour)
 
     nb.anglequiver(
-        ax0,
-        test_route.x[test_entries],
-        test_route.y[test_entries],
-        headings, color=colour, zorder=lines[0].zorder + 1, scale=300, scale_units='xy',
+        ax0, x[test_entries], y[test_entries],
+        # scale=1e6, scale_units='xy',
+        headings, color=colour, zorder=lines[0].zorder + 1,
         alpha=0.8)
 
     # Cap at 90°
@@ -41,9 +55,11 @@ for test_route in test_routes:
     ax1.set_xlabel("Distance along training route (m)")
     ax1.set_ylabel("Heading error (°)")
 
+gm_plotting.APIClient().add_satellite_image_background(ax0)
+
 ax0.legend()
+
 ax1.legend()
-ax0.axis('equal')
 ax1.set_xlim(left=0)
 ax1.set_ylim(bottom=0)
 

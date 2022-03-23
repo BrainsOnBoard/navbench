@@ -22,14 +22,14 @@ def get_valid_entries(db, skip):
     return lst[::skip]
 
 class Analysis:
-    def __init__(self, train_route, train_skip, to_float=False):
+    def __init__(self, train_route, x, y, train_skip, to_float=False):
         self.train_route = train_route
         self.train_entries = get_valid_entries(train_route, train_skip)
         self.train_images = train_route.read_images(self.train_entries, to_float=to_float)
         self.to_float = to_float
 
         # TODO: Could do e.g. medianfilt over these headings
-        self.train_headings_all = np.arctan2(np.diff(train_route.y), np.diff(train_route.x))
+        self.train_headings_all = np.arctan2(np.diff(y), np.diff(x))
         self.train_headings_all = np.append(self.train_headings_all, [self.train_headings_all[-1]])
         self.train_headings = self.train_headings_all[self.train_entries]
 
