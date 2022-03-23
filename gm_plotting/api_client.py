@@ -39,7 +39,7 @@ class APIClient:
         return tuple(details[0]['geometry']['location'].values())
 
     def get_satellite_image(self, gps_coords, zoom=15):
-        filename = f'image_zoom{zoom}_coords{gps_coords[0]}_{gps_coords[1]}.png'
+        filename = f'image_zoom{zoom}_coords{gps_coords[0]:.8f}_{gps_coords[1]:.8f}.png'
         filepath = os.path.join(self.cache_path, filename)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
