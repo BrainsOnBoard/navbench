@@ -22,7 +22,7 @@ def get_valid_entries(db, skip):
     return lst[::skip]
 
 class Analysis:
-    def __init__(self, train_route : nb.Database, x, y, train_skip, to_float=False, preprocess=None):
+    def __init__(self, train_route : nb.Database, x, y, train_skip, preprocess=None, to_float=False):
         self.train_route = train_route
         self.train_entries = get_valid_entries(train_route, train_skip)
         self.train_images = train_route.read_images(self.train_entries, to_float=to_float, preprocess=preprocess)

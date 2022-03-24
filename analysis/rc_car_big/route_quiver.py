@@ -13,7 +13,8 @@ import numpy as np
 
 TRAIN_SKIP = 40
 TEST_SKIP = 40
-PREPROC = None  #ip.resize(180, 90)
+# PREPROC = None
+PREPROC = ip.resize(180, 45)
 
 paths = rc_car_big.get_paths()
 dbs = rc_car_big.load_databases(paths[0:4])  #, limits_metres=(0, 200))
@@ -28,7 +29,7 @@ def to_merc(db):
     return mlon, mlat
 
 train_x, train_y = to_merc(train_route)
-analysis = rc_car_big.Analysis(train_route, train_x, train_y, TRAIN_SKIP, PREPROC)
+analysis = rc_car_big.Analysis(train_route, train_x, train_y, train_skip=TRAIN_SKIP, preprocess=PREPROC)
 _, ax0 = plt.subplots()
 ax0.plot(train_x, train_y, label='Training route')
 _, ax1 = plt.subplots()
