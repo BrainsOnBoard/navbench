@@ -14,7 +14,7 @@ def get_paths():
 
 
 def load_databases(paths=get_paths(), limits_metres=None):
-    return [nb.Database(path, limits_metres=limits_metres, interpolate_xy=True, csvFileName='database_entries_processed.csv') for path in paths]
+    return [nb.Database(path, limits_metres=limits_metres, interpolate_xy=True) for path in paths]
 
 
 def get_valid_entries(db, skip):

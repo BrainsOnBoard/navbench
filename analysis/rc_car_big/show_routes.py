@@ -18,7 +18,7 @@ client = gm_plotting.APIClient()
 
 _, ax = plt.subplots()
 for db in dbs:
-    mlat, mlon = gm_plotting.utm_to_merc(db.x * 1000, db.y * 1000, *UTM_ZONE)
+    mlat, mlon = gm_plotting.utm_to_merc(db.x, db.y, *UTM_ZONE)
     ax.plot(mlon, mlat, alpha=0.7)
 ax.axis('equal')
 names = [db.name.replace("unwrapped_", "") for db in dbs]

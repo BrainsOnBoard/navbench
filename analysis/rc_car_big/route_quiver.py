@@ -22,8 +22,7 @@ train_route = dbs[0]
 test_routes = dbs[1:]
 
 def to_merc(db):
-    # TODO: Fix up datasets properly
-    mlat, mlon = gm_plotting.utm_to_merc(db.x * 1000, db.y * 1000, 30, 'U')
+    mlat, mlon = gm_plotting.utm_to_merc(db.x, db.y, 30, 'U')
 
     # Convert to x, y
     return mlon, mlat
