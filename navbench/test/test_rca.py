@@ -37,7 +37,11 @@ def test_medfilt_both():
 
 def test_medfilt_both_nonzero():
     errs = [45, 45, 30, 30, 46, 1, 46, 30, 30, 45, 45]
-    ca = calculate_rca(errs, medfilt_size=3)
+
+    # We expect a warning because there are no perfect matches
+    with pytest.warns(UserWarning):
+        ca = calculate_rca(errs, medfilt_size=3)
+
     assert (ca.filtered_vals == [45, 45, 30, 30, 30, 46, 30, 30, 30, 45, 45]).all()
     assert ca.goal_idx == 2
     assert ca.bounds == (2, 4)

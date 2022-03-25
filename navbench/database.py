@@ -1,6 +1,7 @@
 import math
 import os
 from collections.abc import Iterable
+from warnings import warn
 
 import cv2
 import numpy as np
@@ -60,7 +61,7 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
     try:
         df = pd.read_csv(csvPath)
     except FileNotFoundError:
-        print("Warning: No CSV file found for", dbDir)
+        warn(f"No CSV file found for {dbDir}")
         assert limits_metres is None
 
         fnames = [f for f in os.listdir(dbDir) if f.endswith(
@@ -103,7 +104,7 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
         assert limits_metres[0] >= 0
         assert limits_metres[0] < limits_metres[1]
         if limits_metres[1] > distance[-1]:
-            print(f'Warning: limit of {limits_metres[1]} is greater than route length of {distance[1]}')
+            warn(f'Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
 
         sel = np.logical_and(distance >= limits_metres[0], distance < limits_metres[1])
         position = position[sel]
@@ -185,11 +186,10 @@ class Database:
                 self.metadata = yaml.full_load(file)["metadata"]
         except:
             self.metadata = None
-            print("WARNING: Could not read database_metadata.yaml")
+            warn("Could not read database_metadata.yaml")
 
         if self.metadata and 'needsUnwrapping' in self.metadata and self.metadata['needsUnwrapping']:
-            print("!!!!! WARNING: This database has not been unwrapped. " +
-                  "Analysis may not make sense! !!!!!")
+            warn("!!!!! This database has not been unwrapped. Analysis may not make sense! !!!!!")
 
     def __len__(self):
         return len(self.filepath)

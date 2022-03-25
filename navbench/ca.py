@@ -1,8 +1,8 @@
+from warnings import warn
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import medfilt
-
-import navbench as nb
 
 
 class CatchmentArea:
@@ -25,7 +25,7 @@ class CatchmentArea:
             if indices.size:
                 goal_idx = indices[0]
             else:
-                print('WARNING: Could not find exact match, using best match as goal')
+                warn('Could not find exact match, using best match as goal')
                 goal_idx = np.argmin(self.filtered_vals)
 
         # Apply process_fun to values from left and right of goal

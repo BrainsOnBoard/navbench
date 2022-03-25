@@ -1,9 +1,11 @@
+from warnings import warn
+
 import numpy as np
 import navbench as nb
 try:
     import pathos.multiprocessing as mp
 except:
-    print('WARNING: Could not find pathos.multiprocessing module')
+    warn('Could not find pathos.multiprocessing module')
 
 
 class InfoMax:

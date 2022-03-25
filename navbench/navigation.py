@@ -1,3 +1,5 @@
+from warnings import warn
+
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,7 +8,7 @@ try:
     import pathos.multiprocessing as mp
 except:
     mp = None
-    print('WARNING: Could not find pathos.multiprocessing module')
+    warn('Could not find pathos.multiprocessing module')
 
 from . import caching
 
@@ -122,7 +124,7 @@ def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
         if mp:
             return run_parallel()
 
-        print('WARNING: Parallel processing requested but pathos.multiprocessing module is not available')
+        warn('Parallel processing requested but pathos.multiprocessing module is not available')
 
     return run_serial()
 
@@ -170,7 +172,7 @@ def _get_ridf_headings_and_snap(images, snapshots, step=1, parallel=None):
         if mp:
             return run_parallel()
 
-        print('WARNING: Parallel processing requested but pathos.multiprocessing module is not available')
+        warn('Parallel processing requested but pathos.multiprocessing module is not available')
 
     return run_serial()
 
