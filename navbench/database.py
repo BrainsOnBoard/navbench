@@ -56,12 +56,14 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
     csvPath = os.path.realpath(csvPath)
     dbDir = os.path.dirname(csvPath)
 
-    print('Loading database at %s...' % dbDir)
+    # Indicate which database warning applies to
+    def dbWarn(msg : str):
+        warn(f'{os.path.basename(dbDir)}: {msg}')
 
     try:
         df = pd.read_csv(csvPath)
     except FileNotFoundError:
-        warn(f"No CSV file found for {dbDir}")
+        dbWarn(f"No CSV file found")
         assert limits_metres is None
 
         fnames = [f for f in os.listdir(dbDir) if f.endswith(
@@ -104,7 +106,7 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
         assert limits_metres[0] >= 0
         assert limits_metres[0] < limits_metres[1]
         if limits_metres[1] > distance[-1]:
-            warn(f'Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
+            dbWarn(f'Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
 
         sel = np.logical_and(distance >= limits_metres[0], distance < limits_metres[1])
         position = position[sel]
@@ -122,8 +124,6 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
         entries["filepath"] = [os.path.join(dbDir, fn.strip()) for fn in df["Filename"]]
     else:
         entries["filepath"] = [None] * len(df)
-
-    print('Database contains %d images' % len(entries['filepath']))
 
     return entries
 
@@ -160,7 +160,7 @@ def read_images(paths, preprocess=None, greyscale=True):
 class Database:
     def __init__(
             self, path, limits_metres=None, interpolate_xy=False,
-            csvFileName='database_entries.csv'):
+            csvFileName='database_entries.csv', quiet=False):
         self.path = path
         self.name = os.path.basename(path)
 
@@ -168,6 +168,10 @@ class Database:
         entries = nb.read_image_database(
             os.path.join(path, csvFileName),
             limits_metres, interpolate_xy)
+
+        if not quiet:
+            print(f'Loaded database {self.name} ({len(entries)} images)')
+
         for key, value in entries.items():
             setattr(self, key, value)
 
