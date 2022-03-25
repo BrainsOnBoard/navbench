@@ -1,68 +1,68 @@
 # %%
+import os
+ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+import sys
+sys.path.append(ROOT)
+
+import gm_plotting
 import rc_car_big
 import matplotlib.pyplot as plt
-import numpy as np
 import navbench as nb
+from navbench import imgproc as ip
+import numpy as np
 
 TRAIN_SKIP = 40
 TEST_SKIP = 40
-TO_FLOAT = False
-
-def get_valid_entries(db, skip):
-    lst = [i for i, x in enumerate(db.x) if not np.isnan(x)]
-    return lst[::skip]
+# PREPROC = None
+PREPROC = ip.resize(180, 45)
 
 paths = rc_car_big.get_paths()
-dbs = rc_car_big.load_databases(paths[0:6], limits_metres=(0, 100))
+dbs = rc_car_big.load_databases(paths[0:4])  #, limits_metres=(0, 200))
 
 train_route = dbs[0]
 test_routes = dbs[1:]
-heading_offset = train_route.calculate_heading_offset(0.25)
 
-train_entries = get_valid_entries(train_route, TRAIN_SKIP)
-train_images = train_route.read_images(train_entries, to_float=TO_FLOAT)
-print(f'Training images: {len(train_images)}')
+def to_merc(db):
+    mlat, mlon = gm_plotting.utm_to_merc(db.x, db.y, 30, 'U')
 
+    # Convert to x, y
+    return mlon, mlat
+
+train_x, train_y = to_merc(train_route)
+analysis = rc_car_big.Analysis(train_route, train_x, train_y, train_skip=TRAIN_SKIP, preprocess=PREPROC)
 _, ax0 = plt.subplots()
-ax0.plot(train_route.x, train_route.y)
-
+ax0.plot(train_x, train_y, label='Training route')
 _, ax1 = plt.subplots()
 
-# TODO: Could do e.g. medianfilt over these headings
-gps_headings = np.arctan2(np.diff(train_route.y), np.diff(train_route.x))
-gps_headings = np.append(gps_headings, [gps_headings[-1]])
-snapshot_headings = gps_headings[train_entries]
-
 for test_route in test_routes:
-    test_entries = get_valid_entries(test_route, TEST_SKIP)
-    test_images = test_route.read_images(test_entries, to_float=TO_FLOAT)
+    test_entries, headings, nearest_train_entries, heading_error = analysis.get_headings(
+        test_route, TEST_SKIP)
 
-    print(f'Test images: {len(test_images)}')
-
-    headings, best_snaps = nb.get_ridf_headings_and_snap(test_images, train_images)
-    headings += snapshot_headings[best_snaps]
-
-    label = test_route.name.replace('unwrapped_','')
-    lines = ax0.plot(test_route.x, test_route.y, '--', label=label)
+    label = test_route.name.replace('unwrapped_', '')
+    x, y = to_merc(test_route)
+    lines = ax0.plot(x, y, '--', label=label)
     colour = lines[0].get_color()
-    ax0.plot(test_route.x[0], test_route.y[0], 'o', color=colour)
+    ax0.plot(x[0], y[0], 'o', color=colour)
 
     nb.anglequiver(
-        ax0,
-        test_route.x[test_entries],
-        test_route.y[test_entries],
-        headings, color=colour, zorder=float('inf'), scale=300, scale_units='xy',
+        ax0, x[test_entries], y[test_entries],
+        # scale=1e6, scale_units='xy',
+        headings, color=colour, zorder=lines[0].zorder + 1,
         alpha=0.8)
 
-    nearest = train_route.get_nearest_entries(test_route.x[test_entries], test_route.y[test_entries])
-    target_headings = gps_headings[nearest]
-    heading_error = np.abs(nb.normalise180(np.rad2deg(target_headings - headings)))
-    ax1.plot(train_route.distance[nearest], heading_error, label=label)
+    # Cap at 90°
+    heading_error = np.minimum(heading_error, 90)
+    ax1.scatter(train_route.distance[nearest_train_entries], heading_error,
+                label=label, alpha=0.5, marker='.')
     ax1.set_xlabel("Distance along training route (m)")
     ax1.set_ylabel("Heading error (°)")
 
-ax0.axis('equal')
+gm_plotting.APIClient().add_satellite_image_background(ax0)
+
 ax0.legend()
+
 ax1.legend()
+ax1.set_xlim(left=0)
+ax1.set_ylim(bottom=0)
 
 plt.show()
