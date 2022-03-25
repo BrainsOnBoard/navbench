@@ -122,8 +122,6 @@ def read_image_database(csvPath, limits_metres, interpolate_xy):
     else:
         entries["filepath"] = [None] * len(df)
 
-    entries["position"] /= 1000  # Convert to m
-
     print('Database contains %d images' % len(entries['filepath']))
 
     return entries
