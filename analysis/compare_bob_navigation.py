@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
 import os
-sys.path.append(os.path.dirname(__file__) + "/..")
+BOB_PATH = os.path.join(os.path.dirname(__file__), os.pardir)
+sys.path.append(BOB_PATH)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,8 +13,8 @@ import pathos.multiprocessing as mp
 from time import time
 
 IM_SIZE = (90, 10)
-DB_ROOT = "datasets/rc_car"
-DB_PATH = DB_ROOT + "/2020-11-04/unwrapped_dataset1"
+DB_ROOT = os.path.join(BOB_PATH, "datasets/rc_car")
+DB_PATH = os.path.join(DB_ROOT, "2020-11-04/unwrapped_dataset1")
 LEARNING_RATE = 0.01
 TANH_SCALING_FACTOR = 0.1
 SEED = 42
