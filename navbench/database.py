@@ -169,11 +169,11 @@ class Database:
             os.path.join(path, csvFileName),
             limits_metres, interpolate_xy)
 
-        if not quiet:
-            print(f'Loaded database {self.name} ({len(entries)} images)')
-
         for key, value in entries.items():
             setattr(self, key, value)
+
+        if not quiet:
+            print(f'Loaded database {self.name} ({len(self)} images)')
 
         if hasattr(self, "position"):
             # Add these attributes for convenience
