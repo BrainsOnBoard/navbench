@@ -36,9 +36,9 @@ def get_ann_bobnav(
 
 
 @nb.cache_result
-def get_ann_nb(weights, learning_rate, tanh_scaling_factor, train_images):
+def get_ann_nb(init_weights, learning_rate, tanh_scaling_factor, train_images):
     algo = nb.InfoMax(learning_rate=learning_rate,
-                      tanh_scaling_factor=tanh_scaling_factor, weights=weights)
+                      tanh_scaling_factor=tanh_scaling_factor, weights=init_weights)
     for im in train_images:
         algo.train(im)
 
@@ -68,7 +68,7 @@ bob_im = bobnav.InfoMax(
 
 db = nb.Database(DB_PATH)
 train_images = db.read_images(preprocess=ip.resize(*IM_SIZE), to_float=False)
-nb_im = get_ann_nb(weights, LEARNING_RATE, TANH_SCALING_FACTOR, train_images)
+nb_im = get_ann_nb(init_weights, LEARNING_RATE, TANH_SCALING_FACTOR, train_images)
 head_offset = db.calculate_heading_offset(0.25)
 
 test_entries = range(0, len(db), 50)
