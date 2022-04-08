@@ -1,8 +1,9 @@
 from warnings import warn
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from pandas import DataFrame
 
 try:
     import pathos.multiprocessing as mp
@@ -12,10 +13,19 @@ except:
 
 from . import caching
 
+
 # Yes, there is np.atleast_3d, but the problem is that it tacks the extra
 # dimension onto the end, whereas we want it to be at the beginning (e.g. you
 # get an array of dims [90, 360, 1] rather than [1, 90, 360])
 def to_images_array(x):
+    try:
+        # Convert elements of DataFrame. The .to_numpy() method doesn't work
+        # here because our data are multi-dimensional arrays.
+        x = x.to_list()
+    except AttributeError:
+        pass
+
+    # Make sure x is a numpy array
     x = np.array(x)
     if x.ndim == 3:
         return x
@@ -128,13 +138,27 @@ def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
 
     return run_serial()
 
-def _get_ridf_headings_and_snap(images, snapshots, step=1, parallel=None):
+def get_ridf_headings_and_snap_no_cache(images, snapshots, step=1, parallel=None):
     """A version of get_ridf_headings() without on-disk caching of results.
 
     Parameters are the same as for get_ridf_headings().
     """
+
+    # If images is from a DataFrame, keep the indexes around
+    if hasattr(images, "iloc"):
+        image_idx = images.index
+    else:
+        image_idx = range(len(images))
+    if hasattr(snapshots, "iloc"):
+        snap_idx = snapshots.index
+    else:
+        snap_idx = range(len(snapshots))
+
     images = to_images_array(images)
     snapshots = to_images_array(snapshots)
+
+    def to_dataframe(seq):
+        return DataFrame.from_records(seq, index=image_idx)
 
     # Get a heading for a single image
     def get_heading_for_image(image):
@@ -145,14 +169,14 @@ def _get_ridf_headings_and_snap(images, snapshots, step=1, parallel=None):
             diffs = diffs[best_snap, :]
         else:
             best_snap = 0
-        return ridf_to_radians(diffs), best_snap
+        return {'estimated_heading': ridf_to_radians(diffs), 'best_snap': snap_idx[best_snap]}
 
     def run_serial():
-        return [get_heading_for_image(image) for image in images]
+        return to_dataframe(get_heading_for_image(image) for image in images)
 
     def run_parallel():
         with mp.Pool() as pool:
-            return pool.map(get_heading_for_image, images)
+            return to_dataframe(pool.map(get_heading_for_image, images))
 
     if parallel is None:
         # Module not installed
@@ -178,8 +202,7 @@ def _get_ridf_headings_and_snap(images, snapshots, step=1, parallel=None):
 
 @caching.cache_result
 def get_ridf_headings_and_snap(*args, **kwargs):
-    arr = _get_ridf_headings_and_snap(*args, **kwargs)
-    return [val[0] for val in arr], [val[1] for val in arr]
+    return get_ridf_headings_and_snap_no_cache(*args, **kwargs)
 
 @caching.cache_result
 def get_ridf_headings(images, snapshots, step=1, parallel=None):
