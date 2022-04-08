@@ -41,7 +41,10 @@ class Database(bobnav.Database):
             lower_entry -= 1
         return (lower_entry, upper_entry)
 
-    def get_nearest_entries(self, x, y):
+    def get_nearest_entries(self, x, y=None):
+        if y is None:
+            return self.entries.iloc[self.get_nearest_entries(x.x, x.y)]
+
         diff_x = np.atleast_2d(self.x) - np.atleast_2d(x).T
         diff_y = np.atleast_2d(self.y) - np.atleast_2d(y).T
         distances = np.hypot(diff_x, diff_y)
