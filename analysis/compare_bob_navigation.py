@@ -69,10 +69,10 @@ bob_im = bobnav.InfoMax(
 db = nb.Database(DB_PATH)
 train_images = db.read_images(preprocess=ip.resize(*IM_SIZE), to_float=False)
 nb_im = get_ann_nb(init_weights, LEARNING_RATE, TANH_SCALING_FACTOR, train_images)
-head_offset = db.calculate_heading_offset(0.25)
 
 test_entries = range(0, len(db), 50)
 test_images = [train_images[i] for i in test_entries]
+head_offset = db.heading[test_entries]
 
 t0 = time()
 with mp.Pool() as pool:
