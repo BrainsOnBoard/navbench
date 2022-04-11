@@ -261,7 +261,7 @@ def route_ridf(images, snap, step=1):
 
 
 def route_ridf_errors(images, snap, step=1):
-    diffs = ridf(images, snap, step)
+    diffs = ridf(images, snap, step=step)
     return [abs(th) for th in ridf_to_degrees(diffs)]
 
 
