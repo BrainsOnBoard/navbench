@@ -1,5 +1,17 @@
+from collections.abc import Iterable
+
 import cv2
 import numpy as np
+
+
+def apply_functions(im, funs):
+    if funs is None:
+        return im
+    if isinstance(funs, Iterable):
+        for fun in funs:
+            im = apply_functions(im, fun)
+        return im
+    return funs(im)
 
 
 def resize(width, height):
