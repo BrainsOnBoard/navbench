@@ -85,11 +85,11 @@ def get_trained_network(training_images, seed, num_hidden=None,
 
 
 @nb.cache_result
-def get_infomax_headings(ann, images, step=1):
+def get_infomax_headings(ann, images, step=1, parallel=True):
     def get_heading(image):
         return nb.ridf_to_radians(ann.ridf(image, step=step))
 
-    if not mp:
+    if not mp or not parallel:
         return np.array([get_heading(image) for image in images])
     else:
         with mp.Pool() as pool:
