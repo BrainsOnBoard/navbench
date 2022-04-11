@@ -17,6 +17,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/analysis/rc_car_big/route_quiver.py",
+            "env": {"LD_PRELOAD": "/lib/libtcmalloc.so"},
             "console": "integratedTerminal",
             "args": []
         },

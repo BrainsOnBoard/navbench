@@ -147,12 +147,16 @@ def get_ridf_headings_and_snap_no_cache(images, snapshots, step=1, parallel=None
     # If images is from a DataFrame, keep the indexes around
     if hasattr(images, "iloc"):
         image_idx = images.index
+        images = images.image
     else:
         image_idx = range(len(images))
     if hasattr(snapshots, "iloc"):
         snap_idx = snapshots.index
+        snap_heads = snapshots.heading.values
+        snapshots = snapshots.image
     else:
         snap_idx = range(len(snapshots))
+        snap_heads = np.zeros(len(snapshots))
 
     images = to_images_array(images)
     snapshots = to_images_array(snapshots)
@@ -169,7 +173,10 @@ def get_ridf_headings_and_snap_no_cache(images, snapshots, step=1, parallel=None
             diffs = diffs[best_snap, :]
         else:
             best_snap = 0
-        return {'estimated_heading': ridf_to_radians(diffs), 'best_snap': snap_idx[best_snap]}
+
+        est_head = ridf_to_radians(diffs) + snap_heads[best_snap]
+        best_snap_idx = snap_idx[best_snap]
+        return {'estimated_heading': est_head, 'best_snap': best_snap_idx}
 
     def run_serial():
         return to_dataframe(get_heading_for_image(image) for image in images)

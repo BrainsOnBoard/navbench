@@ -29,14 +29,13 @@ def to_merc(db):
     return mlon, mlat
 
 train_x, train_y = to_merc(train_route)
-analysis = rc_car_big.Analysis(train_route, train_x, train_y, train_skip=TRAIN_SKIP, preprocess=PREPROC)
+analysis = rc_car_big.Analysis(train_route, train_skip=TRAIN_SKIP, preprocess=PREPROC)
 _, ax0 = plt.subplots()
 ax0.plot(train_x, train_y, label='Training route')
 _, ax1 = plt.subplots()
 
 for test_route in test_routes:
-    test_entries, headings, nearest_train_entries, heading_error = analysis.get_headings(
-        test_route, TEST_SKIP)
+    test_df = analysis.get_headings(test_route, TEST_SKIP)
 
     label = test_route.name.replace('unwrapped_', '')
     x, y = to_merc(test_route)
@@ -45,14 +44,14 @@ for test_route in test_routes:
     ax0.plot(x[0], y[0], 'o', color=colour)
 
     nb.anglequiver(
-        ax0, x[test_entries], y[test_entries],
+        ax0, x[test_df.index], y[test_df.index],
         # scale=1e6, scale_units='xy',
-        headings, color=colour, zorder=lines[0].zorder + 1,
-        alpha=0.8)
+        test_df.heading, color=colour, zorder=lines[0].zorder + 1,
+        alpha=0.8, invert_y=True)
 
     # Cap at 90°
-    heading_error = np.minimum(heading_error, 90)
-    ax1.scatter(train_route.distance[nearest_train_entries], heading_error,
+    test_df.heading_error = np.minimum(test_df.heading_error, 90)
+    ax1.scatter(train_route.distance[test_df.nearest_train_idx], test_df.heading_error,
                 label=label, alpha=0.5, marker='.')
     ax1.set_xlabel("Distance along training route (m)")
     ax1.set_ylabel("Heading error (°)")
