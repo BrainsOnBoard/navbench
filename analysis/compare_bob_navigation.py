@@ -79,11 +79,19 @@ with mp.Pool() as pool:
     bob_heads = np.array(pool.map(lambda im: bob_im.get_heading(im), test_images))
 elapsed = time() - t0
 print(f'Took {elapsed} s')
+bob_heads = np.array([bob_im.get_heading(im) for im in test_images])
 
-nb_heads = nb.get_infomax_headings(nb_im, test_images)
+nb_heads = nb.get_infomax_headings(nb_im, test_images, parallel=False)
 
-_, axes = plt.subplots(1, 2)
+# HACK
+# bob_heads = -bob_heads
+
+_, axes = plt.subplots(1, 4)
 plot_heads(axes[0], db, test_entries, nb_heads + head_offset)
 plot_heads(axes[1], db, test_entries, bob_heads + head_offset)
+
+# _, ax = plt.subplots()
+# ax.plot(nb.normalise180(np.rad2deg(nb_heads)))
+# ax.plot(nb.normalise180(np.rad2deg(-bob_heads)))
 
 plt.show()
