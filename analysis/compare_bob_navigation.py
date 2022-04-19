@@ -66,24 +66,24 @@ bob_im = bobnav.InfoMax(
     tanh_scaling_factor=TANH_SCALING_FACTOR)
 
 db = nb.Database(DB_PATH)
-train_images = db.read_images(preprocess=ip.resize(*IM_SIZE), to_float=False)
+train_entries = db.read_image_entries(preprocess=ip.resize(*IM_SIZE), to_float=False)
+train_images = train_entries.image.to_list()
 nb_im = get_ann_nb(init_weights, LEARNING_RATE, TANH_SCALING_FACTOR, train_images)
 
-test_entries = db.iloc[0::50]
-test_images = [train_images[i] for i in test_entries.index]
+test_entries = train_entries.iloc[0::50]
+test_images = test_entries.image
 
 t0 = time()
-data = bob_im.get_ridf_data(test_images)
-bob_heads = data.heading.to_numpy()
+data = bob_im.ridf(test_entries)
+bob_heads = data.estimated_heading.to_numpy()
 elapsed = time() - t0
 print(f'Took {elapsed} s')
 
 nb_heads = nb.get_infomax_headings(nb_im, test_images, parallel=False)
-
-print(data)
+nb_heads += test_entries.heading
 
 _, axes = plt.subplots(1, 2)
-plot_heads(axes[0], test_entries, nb_heads + test_entries.heading)
-plot_heads(axes[1], test_entries, bob_heads + test_entries.heading)
+plot_heads(axes[0], test_entries, nb_heads)
+plot_heads(axes[1], test_entries, bob_heads)
 
 plt.show()

@@ -28,23 +28,25 @@ def plot_heads(ax, entries, heads):
 bob_pm = bobnav.PerfectMemory(IM_SIZE)
 
 db = nb.Database(DB_PATH)
-train_images = db.read_images(preprocess=ip.resize(*IM_SIZE), to_float=False)
-bob_pm.train(train_images)
+train_entries = db.read_image_entries(preprocess=ip.resize(*IM_SIZE), to_float=False)
+train_images = train_entries.image.to_list()
+bob_pm.train(train_entries)
 
-test_entries = db.iloc[0::50]
-test_images = [train_images[i] for i in test_entries.index]
+test_entries = db.read_image_entries(db.iloc[::50], preprocess=ip.resize(*IM_SIZE), to_float=False)
+test_images = test_entries.image.to_list()
 
 t0 = time()
-data = bob_pm.get_ridf_data(test_images)
-bob_heads = data.heading.to_numpy()
+data = bob_pm.ridf(test_entries)
+bob_heads = data.estimated_heading.to_numpy()
 elapsed = time() - t0
 print(f'Took {elapsed} s')
 
 nb_heads = nb.get_ridf_headings(test_images, train_images)
+nb_heads += test_entries.heading
 
 _, axes = plt.subplots(1, 2)
-plot_heads(axes[0], test_entries, nb_heads + test_entries.heading)
+plot_heads(axes[0], test_entries, nb_heads)
 bh2 = bob_heads + test_entries.heading
-plot_heads(axes[1], test_entries, bob_heads + test_entries.heading)
+plot_heads(axes[1], test_entries, bob_heads)
 
 plt.show()

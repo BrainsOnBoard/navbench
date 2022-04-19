@@ -18,12 +18,10 @@ from . import caching
 # dimension onto the end, whereas we want it to be at the beginning (e.g. you
 # get an array of dims [90, 360, 1] rather than [1, 90, 360])
 def to_images_array(x):
-    try:
+    if hasattr(x, "to_list"):
         # Convert elements of DataFrame. The .to_numpy() method doesn't work
         # here because our data are multi-dimensional arrays.
         x = x.to_list()
-    except AttributeError:
-        pass
 
     # Make sure x is a numpy array
     x = np.array(x)
