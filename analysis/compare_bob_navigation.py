@@ -25,13 +25,14 @@ def get_initial_weights(im_size, num_hidden, seed):
     return weights
 
 
-# @nb.cache_result
 def get_ann_bobnav(
         im_size, weights, learning_rate, tanh_scaling_factor, db_path):
     algo = bobnav.InfoMax(
         im_size, weights=weights, learning_rate=learning_rate,
         tanh_scaling_factor=tanh_scaling_factor)
-    algo.train_route(db_path)
+    db = nb.Database(db_path)
+    algo.train(db.read_images(preprocess=ip.resize(*IM_SIZE), to_float=False))
+
     return algo.get_weights()
 
 
@@ -45,15 +46,13 @@ def get_ann_nb(init_weights, learning_rate, tanh_scaling_factor, train_images):
     return algo
 
 
-def plot_heads(ax, db, test_entries, heads):
-    ax.plot(db.x, db.y)
-    x = [db.x[i] for i in test_entries]
-    y = [db.y[i] for i in test_entries]
+def plot_heads(ax, entries, heads):
+    ax.plot(entries.x, entries.y)
     u = np.cos(heads)
     v = np.sin(heads)
 
-    ax.quiver(x, y, u, v, angles='xy', scale_units='xy') #, scale=10)
-    ax.plot(x[0], y[0], 'go')
+    ax.quiver(entries.x, entries.y, u, v, angles='xy', scale_units='xy') #, scale=10)
+    ax.plot(entries.x[0], entries.y[0], 'go')
     ax.axis('equal')
 
 
@@ -70,28 +69,21 @@ db = nb.Database(DB_PATH)
 train_images = db.read_images(preprocess=ip.resize(*IM_SIZE), to_float=False)
 nb_im = get_ann_nb(init_weights, LEARNING_RATE, TANH_SCALING_FACTOR, train_images)
 
-test_entries = range(0, len(db), 50)
-test_images = [train_images[i] for i in test_entries]
-head_offset = db.heading[test_entries]
+test_entries = db.iloc[0::50]
+test_images = [train_images[i] for i in test_entries.index]
 
 t0 = time()
-with mp.Pool() as pool:
-    bob_heads = np.array(pool.map(lambda im: bob_im.get_heading(im), test_images))
+data = bob_im.get_ridf_data(test_images)
+bob_heads = data.heading.to_numpy()
 elapsed = time() - t0
 print(f'Took {elapsed} s')
-bob_heads = np.array([bob_im.get_heading(im) for im in test_images])
 
 nb_heads = nb.get_infomax_headings(nb_im, test_images, parallel=False)
 
-# HACK
-# bob_heads = -bob_heads
+print(data)
 
-_, axes = plt.subplots(1, 4)
-plot_heads(axes[0], db, test_entries, nb_heads + head_offset)
-plot_heads(axes[1], db, test_entries, bob_heads + head_offset)
-
-# _, ax = plt.subplots()
-# ax.plot(nb.normalise180(np.rad2deg(nb_heads)))
-# ax.plot(nb.normalise180(np.rad2deg(-bob_heads)))
+_, axes = plt.subplots(1, 2)
+plot_heads(axes[0], test_entries, nb_heads + test_entries.heading)
+plot_heads(axes[1], test_entries, bob_heads + test_entries.heading)
 
 plt.show()
