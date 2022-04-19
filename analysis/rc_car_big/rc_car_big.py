@@ -1,6 +1,7 @@
 import os
 import sys
 from glob import glob
+from time import perf_counter
 
 import numpy as np
 
@@ -8,6 +9,7 @@ ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 sys.path.append(ROOT)
 
 import navbench as nb
+import bob_robotics.navigation as bobnav
 
 DBROOT = os.path.join(ROOT, 'datasets/rc_car/rc_car_big')
 
@@ -19,11 +21,6 @@ def get_paths():
 def load_databases(paths=get_paths(), limits_metres=None):
     return [nb.Database(path, limits_metres=limits_metres, interpolate_xy=True) for path in paths]
 
-
-def get_database_subset(db, skip):
-    assert not db.x.hasnans
-    return db.iloc[::skip].copy()
-
 class Analysis:
     def __init__(
             self, train_route: nb.Database, train_skip, preprocess=None,
@@ -32,20 +29,21 @@ class Analysis:
         self.to_float = to_float
         self.preprocess = preprocess
 
-        self.train_entries = get_database_subset(train_route, train_skip)
-        self.train_entries['image'] = train_route.read_images(
-            self.train_entries, to_float=to_float, preprocess=preprocess)
+        self.train_entries = train_route.read_image_entries(
+            train_route.iloc[::train_skip], to_float=to_float, preprocess=preprocess)
 
         print(f'Training images: {len(self.train_entries)}')
 
+        self.pm = bobnav.PerfectMemory(self.train_entries.image[0].shape[::-1])
+        self.pm.train(self.train_entries)
+
     def get_headings(self, test_route, test_skip):
-        test_df = get_database_subset(test_route, test_skip)
-        test_df['image'] = test_route.read_images(
-            test_df, to_float=self.to_float, preprocess=self.preprocess)
+        test_df = test_route.read_image_entries(
+            test_route.iloc[:: test_skip],
+            to_float=self.to_float, preprocess=self.preprocess)
         print(f'Test images: {len(test_df)}')
 
-        headings_df = nb.get_ridf_headings_and_snap(test_df, self.train_entries)
-        test_df = test_df.join(headings_df)
+        test_df = test_df.join(self.pm.ridf(test_df))
 
         nearest = self.train_route.get_nearest_entries(test_df)
         test_df['nearest_train_idx'] = nearest.index
