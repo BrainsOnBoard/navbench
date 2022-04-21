@@ -43,7 +43,9 @@ class Analysis:
             to_float=self.to_float, preprocess=self.preprocess)
         print(f'Test images: {len(test_df)}')
 
-        test_df = test_df.join(self.pm.ridf(test_df))
+        t0 = perf_counter()
+        test_df = self.pm.ridf(test_df)
+        print(f'Took {perf_counter() - t0}s')
 
         nearest = self.train_route.get_nearest_entries(test_df)
         test_df['nearest_train_idx'] = nearest.index
