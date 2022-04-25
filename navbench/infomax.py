@@ -1,9 +1,8 @@
-from .caching import cache_result
 import bob_robotics.navigation as bobnav
 InfoMax = bobnav.InfoMax
 
 
-@cache_result
+@bobnav.cache_result
 def get_trained_network(training_images, seed,
                         learning_rate=InfoMax.DEFAULT_LEARNING_RATE):
     assert seed is not None
@@ -13,7 +12,7 @@ def get_trained_network(training_images, seed,
     return infomax
 
 
-@cache_result
+@bobnav.cache_result
 def get_infomax_headings(ann, images):
     df = ann.ridf(images)
     return df.estimated_heading
