@@ -1,7 +1,6 @@
 import os
 import sys
 from glob import glob
-from time import perf_counter
 
 import numpy as np
 
@@ -20,6 +19,10 @@ def get_paths():
 
 def load_databases(paths=get_paths(), limits_metres=None):
     return [nb.Database(path, limits_metres=limits_metres, interpolate_xy=True) for path in paths]
+
+@nb.cache_result
+def _get_pm_headings(pm, test_df):
+    return pm.ridf(test_df)
 
 class Analysis:
     def __init__(
@@ -43,9 +46,7 @@ class Analysis:
             to_float=self.to_float, preprocess=self.preprocess)
         print(f'Test images: {len(test_df)}')
 
-        t0 = perf_counter()
-        test_df = self.pm.ridf(test_df)
-        print(f'Took {perf_counter() - t0}s')
+        test_df = _get_pm_headings(self.pm, test_df)
 
         nearest = self.train_route.get_nearest_entries(test_df)
         test_df['nearest_train_idx'] = nearest.index
