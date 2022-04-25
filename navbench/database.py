@@ -67,8 +67,8 @@ class Database(bobnav.Database):
 
         idf_diffs = nb.route_idf(images, snap)
         ridf_diffs = nb.route_ridf(images, snap, ridf_step)
-        nb.plot_route_idf(entries, idf_diffs, ridf_diffs,
-                          filter_zeros=filter_zeros)
+        return nb.plot_route_idf(entries, idf_diffs, ridf_diffs,
+                                 filter_zeros=filter_zeros)
 
     def plot_idfs(self, ax, ref_entry, max_dist, preprocess=None, fr_step=1, ridf_step=1, filter_zeros=True):
         (lower, upper) = self.entry_bounds(max_dist, ref_entry)
