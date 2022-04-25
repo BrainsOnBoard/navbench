@@ -55,8 +55,8 @@ class Database(bobnav.Database):
     def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
-        snap = self.read_images(ref_entry, preprocess)
-        images = self.read_images(entries, preprocess)
+        snap = self.read_images(ref_entry, preprocess, to_float=False)
+        images = self.read_images(entries, preprocess, to_float=False)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, len(images)))
         return (images, snap, entries)
