@@ -1,16 +1,7 @@
-from warnings import warn
-
+import bob_robotics.navigation as bobnav
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas import DataFrame
-import bob_robotics.navigation as bobnav
-
-try:
-    import pathos.multiprocessing as mp
-except:
-    mp = None
-    warn('Could not find pathos.multiprocessing module')
 
 from . import caching
 
