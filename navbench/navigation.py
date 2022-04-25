@@ -4,6 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from pandas import DataFrame
+import bob_robotics.navigation as bobnav
 
 try:
     import pathos.multiprocessing as mp
@@ -50,94 +51,27 @@ def mean_absdiff(x, y):
     return ret if len(ret) > 1 else ret[0]
 
 
-def rotate_pano(image, right_deg):
-    rot_px = int(right_deg * image.shape[1] / 360)
-    return np.roll(image, rot_px, axis=1)
-
-
-def __ridf(test_images, ref_image, difference, step):
-    """Internal function; do not use directly"""
-    assert test_images.ndim == 3
-    assert ref_image.ndim == 2
-
-    step_max = ref_image.shape[1]
-    if step < 0:
-        step_max = -step_max
-    steps = range(0, step_max, step)
-
-    diffs = np.empty((len(test_images), len(steps)), dtype=float)
-    for i, rot in enumerate(steps):
-        rref = np.roll(ref_image, -rot, axis=1)
-        diffs[:, i] = difference(test_images, rref)
-
-    return diffs if diffs.shape[0] > 1 else diffs[0]
-
-
-def ridf(images, snapshots, difference=mean_absdiff, step=1):
+def ridf(images, snapshots, step=1):
     """Return an RIDF for one or more images vs one or more snapshots (as a vector)"""
-    assert step > 0
-    assert step % 1 == 0
-    images = to_images_array(images)
     snapshots = to_images_array(snapshots)
-    if len(images) == 0 or len(snapshots) == 0:
-        return []
-
-    assert len(images) == 1 or len(snapshots) == 1
-
-    if len(snapshots) > 1:
-        return __ridf(snapshots, images[0], difference, -step)
-
-    return __ridf(images, snapshots[0], difference, step)
+    pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
+    pm.train(snapshots)
+    return pm.ridf(images, step=step).ridf
 
 
-def get_ridf_headings_no_cache(images, snapshots, step=1, parallel=None):
+def get_ridf_headings_no_cache(images, snapshots, step=1):
     """A version of get_ridf_headings() without on-disk caching of results.
 
     Parameters are the same as for get_ridf_headings().
     """
-    images = to_images_array(images)
     snapshots = to_images_array(snapshots)
+    pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
+    pm.train(snapshots)
+    return pm.ridf(images, step=step).estimated_heading
 
-    # Get a heading for a single image
-    def get_heading_for_image(image):
-        diffs = ridf(image, snapshots, step=step)
-        if len(snapshots) > 1:
-            best_over_rot = np.min(diffs, axis=1)
-            best_row = np.argmin(best_over_rot)
-            diffs = diffs[best_row, :]
-        return ridf_to_radians(diffs)
-
-    def run_serial():
-        return np.array([get_heading_for_image(image) for image in images])
-
-    def run_parallel():
-        with mp.Pool() as pool:
-            return np.array(pool.map(get_heading_for_image, images))
-
-    if parallel is None:
-        # Module not installed
-        if not mp:
-            return run_serial()
-
-        # Process in parallel if we have the module and there is a fair
-        # amount of processing to be done
-        num_ops = len(images) * len(snapshots) * images[0].size
-
-        # This value was determined quasi-experimentally on my home machine -- AD
-        if num_ops >= 120000:
-            return run_parallel()
-        return run_serial()
-
-    if parallel:
-        if mp:
-            return run_parallel()
-
-        warn('Parallel processing requested but pathos.multiprocessing module is not available')
-
-    return run_serial()
 
 @caching.cache_result
-def get_ridf_headings(images, snapshots, step=1, parallel=None):
+def get_ridf_headings(images, snapshots, step=1):
     """Get a numpy array of headings computed from multiple images and snapshots
 
     Parameters
@@ -155,7 +89,7 @@ def get_ridf_headings(images, snapshots, step=1, parallel=None):
     Returns:
         Headings in radians.
     """
-    return get_ridf_headings_no_cache(images, snapshots, step, parallel)
+    return get_ridf_headings_no_cache(images, snapshots, step)
 
 
 def route_idf(images, snap):
