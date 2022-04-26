@@ -25,15 +25,12 @@ def _get_pm_headings(pm, test_df):
     return pm.ridf(test_df)
 
 class Analysis:
-    def __init__(
-            self, train_route: nb.Database, train_skip, preprocess=None,
-            to_float=False):
+    def __init__(self, train_route: nb.Database, train_skip, preprocess=None):
         self.train_route = train_route
-        self.to_float = to_float
         self.preprocess = preprocess
 
         self.train_entries = train_route.read_image_entries(
-            train_route.iloc[::train_skip], to_float=to_float, preprocess=preprocess)
+            train_route.iloc[::train_skip], preprocess=preprocess)
 
         print(f'Training images: {len(self.train_entries)}')
 
@@ -43,7 +40,7 @@ class Analysis:
     def get_headings(self, test_route, test_skip):
         test_df = test_route.read_image_entries(
             test_route.iloc[:: test_skip],
-            to_float=self.to_float, preprocess=self.preprocess)
+            preprocess=self.preprocess)
         print(f'Test images: {len(test_df)}')
 
         test_df = _get_pm_headings(self.pm, test_df)

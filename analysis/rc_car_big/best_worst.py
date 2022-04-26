@@ -42,7 +42,7 @@ _, ax0 = plt.subplots(4, 1)
 test_im = datum.image
 best_train_entry = analysis.train_entries.loc[datum.best_snap_idx, :]
 best_snap = best_train_entry.image
-nearest_train_entry = analysis.train_route.read_image_entries(analysis.train_route.loc[datum.nearest_train_idx], preprocess=PREPROC, to_float=False)
+nearest_train_entry = analysis.train_route.read_image_entries(analysis.train_route.loc[datum.nearest_train_idx], preprocess=PREPROC)
 
 show_im(ax0[0], test_im, 'Test image (%.2f m, i=%d)' % (nearest_train_entry.distance, datum.database_idx))
 show_im(ax0[1], best_snap, 'Best-matching snapshot (%.2f m, i=%d)' % (best_train_entry.distance, best_train_entry.database_idx))
@@ -52,7 +52,7 @@ show_rot_diffim(ax0[3], test_im, best_snap, datum.estimated_dheading, "Differenc
 
 _, ax1 = plt.subplots(4, 1)
 show_im(ax1[0], test_im, 'Test image (%.2f m)' % nearest_train_entry.distance)
-target_snap = analysis.train_route.read_images(datum.nearest_train_idx, preprocess=PREPROC, to_float=False)
+target_snap = analysis.train_route.read_images(datum.nearest_train_idx, preprocess=PREPROC)
 show_im(ax1[1], target_snap, '"Target" snapshot')
 target_ridf = analysis.pm.ridf(nearest_train_entry)
 nb.plot_ridf(target_ridf.ridf / 255, ax=ax1[2], show_minimum=True)
