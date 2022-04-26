@@ -5,6 +5,7 @@ import numpy as np
 
 import navbench as nb
 from navbench import imgproc as ip
+import bob_robotics.navigation as bobnav
 
 TRAIN_SKIP = 10
 TEST_SKIP = 40
@@ -20,6 +21,12 @@ analysis = rc_car_big.Analysis(train_route, train_skip=TRAIN_SKIP, preprocess=PR
 test_df = analysis.get_headings(test_route, TEST_SKIP)
 test_df.sort_values('heading_error', inplace=True)
 
+def get_data(images, snapshots, step=1):
+    snapshots = bobnav.to_images_array(snapshots)
+    pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
+    pm.train(snapshots)
+    return pm.ridf(images, step=step)
+
 def show_rot_diffim(ax, im, snap, theta, title):
     rim = np.roll(im, round(theta * im.shape[1] / (2 * np.pi)), axis=1)
     diffim = rim.astype(float) - snap.astype(float)
@@ -33,6 +40,13 @@ def show_im(ax, im, title, cmap='gray'):
     ax.set_yticks(())
     ax.set_title(title)
 
+def show_data(ax, snap, ridf, best_snap_idx, snap_title):
+    show_im(ax[0], test_im, 'Test image (i=%d)' % datum.database_idx)
+    show_im(ax[1], snap, snap_title)
+    nb.plot_ridf(ridf.ridf / 255, ax=ax[2], show_minimum=True)
+    ax[2].set_title(f'RIDF (snapshot={best_snap_idx})')
+    show_rot_diffim(ax[3], test_im, best_snap, ridf.estimated_dheading, "Difference")
+
 # Show worst match
 datum = test_df.iloc[-1]
 datum = datum.squeeze()
@@ -43,21 +57,14 @@ test_im = datum.image
 best_train_entry = analysis.train_entries.loc[datum.best_snap_idx, :]
 best_snap = best_train_entry.image
 nearest_train_entry = analysis.train_route.read_image_entries(analysis.train_route.loc[datum.nearest_train_idx], preprocess=PREPROC)
+target_snap = analysis.train_route.read_images(datum.nearest_train_idx, preprocess=PREPROC)
+target_ridf = get_data(test_im, target_snap)
 
-show_im(ax0[0], test_im, 'Test image (%.2f m, i=%d)' % (nearest_train_entry.distance, datum.database_idx))
-show_im(ax0[1], best_snap, 'Best-matching snapshot (%.2f m, i=%d)' % (best_train_entry.distance, best_train_entry.database_idx))
-nb.plot_ridf(datum.ridf / 255, ax=ax0[2], show_minimum=True)
-ax0[2].set_title(f'RIDF (snapshot={datum.best_snap_idx})')
-show_rot_diffim(ax0[3], test_im, best_snap, datum.estimated_dheading, "Difference")
+show_data(ax0, best_snap, datum, datum.best_snap_idx, 'Best-matching snapshot (%.2f m, j=%d)' % (best_train_entry.distance, best_train_entry.database_idx))
 
 _, ax1 = plt.subplots(4, 1)
-show_im(ax1[0], test_im, 'Test image (%.2f m)' % nearest_train_entry.distance)
-target_snap = analysis.train_route.read_images(datum.nearest_train_idx, preprocess=PREPROC)
-show_im(ax1[1], target_snap, '"Target" snapshot')
-target_ridf = analysis.pm.ridf(nearest_train_entry)
-nb.plot_ridf(target_ridf.ridf / 255, ax=ax1[2], show_minimum=True)
-ax1[2].set_title(f'RIDF (snapshot={nearest_train_entry.database_idx})')
-show_rot_diffim(ax1[3], test_im, target_snap, target_ridf.estimated_dheading, "Difference")
+show_data(ax1, target_snap, target_ridf, datum.nearest_train_idx, 'Target snapshot (%.2f m, j=%d)' % (nearest_train_entry.distance, nearest_train_entry.database_idx))
+
 plt.show()
 
 # %%
