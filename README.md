@@ -1,6 +1,12 @@
 # NavBench
-Python 3 code for analysing and benchmarking navigation performance for
-different algorithms.
+This repo contains navigation analysis and comparison of different algorithms
+for different datasets. It formerly also contained a library for performing this
+analysis, but this has been merged into BoB robotics. Now you need [the BoB
+robotics navigation Python module](https://github.com/BrainsOnBoard/bob_robotics/tree/master/python/navigation)
+installed to run the code in this repo.
+
+Some code also relies on the ``gm-plotting`` module to overlay plots on
+satellite images, for which you will need a valid Google API key and [this code](https://github.com/BrainsOnBoard/python-gm-plotting).
 
 To get started, take a look at the [examples](examples) folder.
 

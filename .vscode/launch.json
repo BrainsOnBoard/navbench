@@ -13,6 +13,14 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "best_worst.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/analysis/rc_car_big/best_worst.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
             "name": "route_quiver.py",
             "type": "python",
             "request": "launch",
