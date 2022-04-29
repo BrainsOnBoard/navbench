@@ -14,7 +14,7 @@ import numpy as np
 TRAIN_SKIP = 40
 TEST_SKIP = 40
 # PREPROC = None
-PREPROC = ip.resize(180, 45)
+PREPROC = ip.resize(45, 180)
 
 paths = rc_car_big.get_paths()
 dbs = rc_car_big.load_databases(paths[0:4])  #, limits_metres=(0, 200))

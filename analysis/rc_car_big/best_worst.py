@@ -9,7 +9,7 @@ import bob_robotics.navigation as bobnav
 
 TRAIN_SKIP = 10
 TEST_SKIP = 40
-PREPROC = ip.resize(180, 45)
+PREPROC = ip.resize(45, 180)
 
 paths = rc_car_big.get_paths()
 dbs = rc_car_big.load_databases(paths[0:2])  #, limits_metres=(0, 200))
@@ -23,7 +23,7 @@ test_df.sort_values('heading_error', inplace=True)
 
 def get_data(images, snapshots, step=1):
     snapshots = bobnav.to_images_array(snapshots)
-    pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
+    pm = bobnav.PerfectMemory(snapshots[0].shape)
     pm.train(snapshots)
     return pm.ridf(images, step=step)
 

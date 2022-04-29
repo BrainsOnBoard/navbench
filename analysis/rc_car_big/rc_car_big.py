@@ -34,7 +34,7 @@ class Analysis:
 
         print(f'Training images: {len(self.train_entries)}')
 
-        self.pm = bobnav.PerfectMemory(self.train_entries.image[0].shape[::-1])
+        self.pm = bobnav.PerfectMemory(self.train_entries.image[0].shape)
         self.pm.train(self.train_entries)
 
     def get_headings(self, test_route, test_skip):

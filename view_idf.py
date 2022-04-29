@@ -36,7 +36,7 @@ class IDFViewer(nb.Database):
         self.figure.canvas.mpl_connect(
             'button_press_event', self.mouse_clicked)
 
-        resize = ip.resize(180, 55)
+        resize = ip.resize(55, 180)
         entries = range(*self.bounds)
         self.images = self.read_images(entries, resize)
         self.snap = self.read_images(goal, resize)
