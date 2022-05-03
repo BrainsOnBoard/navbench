@@ -31,13 +31,7 @@ def distance2d(entry1, entry2):
     else:
         return np.hypot(diff[0, :], diff[1, :])
 
-def to_merc(db):
-    mlat, mlon = gm_plotting.utm_to_merc(db.x, db.y, 30, 'U')
-
-    # Convert to x, y
-    return mlon, mlat
-
-train_x, train_y = to_merc(train_route)
+train_x, train_y = rc_car_big.to_merc(train_route)
 analysis = rc_car_big.Analysis(train_route, train_skip=TRAIN_SKIP, preprocess=PREPROC)
 _, ax0 = plt.subplots()
 ax0.plot(train_x, train_y, label='Training route')
@@ -49,7 +43,7 @@ for test_route in test_routes:
     test_df = analysis.get_headings(test_route, TEST_SKIP)
 
     label = test_route.name.replace('unwrapped_', '')
-    x, y = to_merc(test_route)
+    x, y = rc_car_big.to_merc(test_route)
     lines = ax0.plot(x, y, '--', label=label)
     colour = lines[0].get_color()
     ax0.plot(x[0], y[0], 'o', color=colour)

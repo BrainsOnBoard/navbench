@@ -3,6 +3,7 @@ import sys
 from glob import glob
 
 import numpy as np
+import gm_plotting
 
 ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 sys.path.append(ROOT)
@@ -20,9 +21,18 @@ def get_paths():
 def load_databases(paths=get_paths(), limits_metres=None):
     return [nb.Database(path, limits_metres=limits_metres, interpolate_xy=True) for path in paths]
 
+
 @nb.cache_result
 def _get_pm_headings(pm, test_df):
     return pm.ridf(test_df)
+
+
+def to_merc(db):
+    mlat, mlon = gm_plotting.utm_to_merc(db.x, db.y, 30, 'U')
+
+    # Convert to x, y
+    return mlon, mlat
+
 
 class Analysis:
     def __init__(self, train_route: nb.Database, train_skip, preprocess=None):
