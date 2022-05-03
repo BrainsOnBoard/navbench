@@ -24,3 +24,6 @@ git submodule update --init datasets/rc_car
 (This requires that you have cloned this repository with git!)
 
 These image databases are in the same format used by [BoB robotics](https://github.com/BrainsOnBoard/bob_robotics).
+
+Unwrapped versions of some of these image databases are also available on my
+personal website [here](https://users.sussex.ac.uk/~ad374/imdb/).
