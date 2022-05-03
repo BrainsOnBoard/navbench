@@ -4,6 +4,7 @@ from glob import glob
 
 import numpy as np
 import gm_plotting
+import pandas as pd
 
 ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 sys.path.append(ROOT)
@@ -32,6 +33,10 @@ def to_merc(db):
 
     # Convert to x, y
     return mlon, mlat
+
+
+def get_gps_quality(df):
+    return df['GPS quality'].apply(pd.to_numeric, errors='coerce')
 
 
 class Analysis:
