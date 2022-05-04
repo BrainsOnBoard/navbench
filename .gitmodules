@@ -10,12 +10,15 @@
 [submodule "datasets/gantry"]
 	path = datasets/gantry
 	url = ../robot_gantry_matlab
+[submodule "datasets/imperial_uav"]
+	path = datasets/imperial_uav
+	url = ../imperial_uav_image_databases
+[submodule "datasets/library_square"]
+	path = datasets/library_square
+	url = ../sussex_library_square_data
 [submodule "datasets/newton"]
 	path = datasets/newton
 	url = ../newton_agritech_tractor_image_databases
 [submodule "datasets/rc_car"]
 	path = datasets/rc_car
 	url = ../rc_car_image_databases
-[submodule "datasets/library_square"]
-	path = datasets/library_square
-	url = ../sussex_library_square_data
