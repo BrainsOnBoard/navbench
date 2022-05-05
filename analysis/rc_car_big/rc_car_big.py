@@ -20,7 +20,13 @@ def get_paths():
 
 
 def load_databases(paths=get_paths(), limits_metres=None):
-    return [nb.Database(path, limits_metres=limits_metres, interpolate_xy=True) for path in paths]
+    dbs = [nb.Database(path, limits_metres=limits_metres, interpolate_xy=False) for path in paths]
+
+    # Check that we're using Thomas's sanitised CSV files
+    for db in dbs:
+        assert not np.any(np.isnan(db.x))
+
+    return dbs
 
 
 @nb.cache_result
