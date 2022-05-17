@@ -1,6 +1,8 @@
 *~
+*.mat
 *.pyc
 *.pkl
+*.zip
 
 # Jupyter Notebook
 .ipynb_checkpoints
