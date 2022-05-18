@@ -3,8 +3,8 @@ import os
 
 import rc_car_big
 from bob_robotics.navigation import imgproc as ip
+import bob_robotics.navigation as bobnav
 from scipy.io import savemat
-import numpy as np
 
 MY_PATH = os.path.dirname(__file__)
 TRAIN_SKIP = 1
@@ -56,6 +56,13 @@ for test_route in test_routes:
     # This column contains a huuuuge amount of data, so let's do without it.
     # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
     df.drop('differences', axis=1, inplace=True)
+
+    # Save RIDF for nearest point on training route too
+    train_images = analysis.train_route.read_images(df.nearest_train_idx.to_list(), preprocess=PREPROC)
+    nearest_ridfs = []
+    for image, snap in zip(df.image, train_images):
+        nearest_ridfs.append(bobnav.ridf(image, snap))
+    df['nearest_ridf'] = nearest_ridfs
 
     # These are possibly confusing
     df.drop(columns=['yaw', 'best_snap'], axis=1, inplace=True)
