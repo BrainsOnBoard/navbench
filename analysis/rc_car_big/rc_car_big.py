@@ -1,17 +1,14 @@
 import os
-import sys
 from glob import glob
 
+import bob_robotics.navigation as bobnav
+from bob_robotics.navigation import imgproc as ip
 import numpy as np
-import gm_plotting
 import pandas as pd
 
+import gm_plotting
+
 ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
-sys.path.append(ROOT)
-
-import navbench as nb
-import bob_robotics.navigation as bobnav
-
 DBROOT = os.path.join(ROOT, 'datasets/rc_car/rc_car_big')
 
 
@@ -20,7 +17,7 @@ def get_paths():
 
 
 def load_databases(paths=get_paths(), limits_metres=None):
-    dbs = [nb.Database(path, limits_metres=limits_metres, interpolate_xy=False) for path in paths]
+    dbs = [bobnav.Database(path, limits_metres=limits_metres, interpolate_xy=False) for path in paths]
 
     # Check that we're using Thomas's sanitised CSV files
     for db in dbs:
@@ -29,7 +26,7 @@ def load_databases(paths=get_paths(), limits_metres=None):
     return dbs
 
 
-@nb.cache_result
+@bobnav.cache_result
 def _get_pm_headings(pm, test_df):
     return pm.ridf(test_df)
 
@@ -44,9 +41,21 @@ def to_merc(db):
 def get_gps_quality(df):
     return df['GPS quality'].apply(pd.to_numeric, errors='coerce')
 
+def run_analysis(train_route_path, test_route_paths, train_skip, test_skip, im_size, preprocess_str, process_data=None):
+    preprocess = (ip.resize(*im_size), eval(preprocess_str))
+
+    train_route = bobnav.Database(train_route_path)
+    test_routes = [bobnav.Database(path) for path in test_route_paths]
+    analysis = Analysis(train_route, train_skip, preprocess=preprocess)
+    for test_route in test_routes:
+        df = analysis.get_headings(test_route, test_skip)
+        if process_data:
+            process_data(analysis, test_route, df)
+    return analysis
+
 
 class Analysis:
-    def __init__(self, train_route: nb.Database, train_skip, preprocess=None):
+    def __init__(self, train_route: bobnav.Database, train_skip, preprocess=None):
         self.train_route = train_route
         self.preprocess = preprocess
 
@@ -70,5 +79,5 @@ class Analysis:
         test_df['nearest_train_idx'] = nearest.index
         target_headings = nearest.heading
         dhead = np.array(target_headings) - np.array(test_df.estimated_heading)
-        test_df['heading_error'] = np.abs(nb.normalise180(np.rad2deg(dhead)))
+        test_df['heading_error'] = np.abs(bobnav.normalise180(np.rad2deg(dhead)))
         return test_df
