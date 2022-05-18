@@ -7,13 +7,12 @@ import bob_robotics.navigation as bobnav
 from scipy.io import savemat
 from shutil import make_archive
 
-MY_PATH = os.path.dirname(__file__)
 TRAIN_SKIP = 1
 TEST_SKIP = 80
 IM_SIZE = (45, 180)
 PREPROC = 'None'
 
-MAT_ROOT = os.path.join(MY_PATH, 'mat_files')
+MAT_ROOT = os.path.join(os.path.dirname(__file__), 'mat_files')
 MAT_SUFFIX = f'data_train_skip={TRAIN_SKIP}_test_skip={TEST_SKIP}_imsize={IM_SIZE[0]}x{IM_SIZE[1]}_preproc={PREPROC}'
 MAT_PATH = os.path.join(MAT_ROOT, MAT_SUFFIX)
 
@@ -47,15 +46,15 @@ def save_df(filename, df, db):
     savemat(filepath, dict_out, appendmat=False, oned_as='column')
 
 
-def save_test_data(analysis, test_route, df):
+def save_test_data(train_route, test_route, df, train_skip, test_skip, im_size, preprocess):
     # This column contains a huuuuge amount of data, so let's do without it.
     # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
     df.drop('differences', axis=1, inplace=True)
 
     # Save RIDF for nearest point on training route too
-    train_images = analysis.train_route.read_images(
+    train_images = train_route.read_images(
         df.nearest_train_idx.to_list(),
-        preprocess=analysis.preprocess)
+        preprocess=preprocess)
     nearest_ridfs = []
     for image, snap in zip(df.image, train_images):
         nearest_ridfs.append(bobnav.ridf(image, snap))
@@ -71,7 +70,7 @@ paths = rc_car_big.get_paths()
 analysis = rc_car_big.run_analysis(
     paths[0],
     [paths[1]],
-    TRAIN_SKIP, TEST_SKIP, IM_SIZE, PREPROC, save_test_data)
+    [TRAIN_SKIP], [TEST_SKIP], [IM_SIZE], [PREPROC], save_test_data)[0]
 save_df('train.mat', analysis.train_entries, analysis.train_route)
 
 make_archive(MAT_SUFFIX, 'zip', root_dir=MAT_ROOT, base_dir=MAT_SUFFIX)
