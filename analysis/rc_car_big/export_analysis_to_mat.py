@@ -2,31 +2,34 @@
 import os
 
 import rc_car_big
-from bob_robotics.navigation import imgproc as ip
 import bob_robotics.navigation as bobnav
 from scipy.io import savemat
 from shutil import make_archive
+from urllib.parse import urlencode
 
-TRAIN_SKIP = 1
-TEST_SKIP = 80
-IM_SIZE = (45, 180)
-PREPROC = 'None'
+TRAIN_SKIP = [10]
+TEST_SKIP = [80]
+IM_SIZE = [(45, 180)]
+PREPROC = ['None']
+OVERWRITE = True
 
 MAT_ROOT = os.path.join(os.path.dirname(__file__), 'mat_files')
-MAT_SUFFIX = f'data_train_skip={TRAIN_SKIP}_test_skip={TEST_SKIP}_imsize={IM_SIZE[0]}x{IM_SIZE[1]}_preproc={PREPROC}'
-MAT_PATH = os.path.join(MAT_ROOT, MAT_SUFFIX)
-
-try:
-    os.mkdir(MAT_PATH)
-except FileExistsError:
-    pass
 
 
 def filter_col_name(name: str):
     return name.replace("[", "").replace("]", "").replace(" ", "_")
 
 
-def save_df(filename, df, db):
+def get_mat_folder_name(params):
+    if 'database_name' in params:
+        params = params.copy()
+        del params['database_name']
+
+    params_ordered = sorted(params.items(), key=lambda val: val[0])
+    return urlencode(params_ordered, doseq=True).replace("&", "_")
+
+
+def save_df(filename, df, params):
     df_out = df.rename(columns=filter_col_name)
 
     # Don't give the absolute path, as that's probably not useful
@@ -37,16 +40,25 @@ def save_df(filename, df, db):
     for col in idx_cols:
         df_out[col] += 1
 
-    dict_out = df_out.to_dict('list')
-    dict_out['database_name'] = db.name
-    dict_out['preprocessing'] = PREPROC
+    dict_out = {'params': params, **df_out.to_dict('list')}
 
-    filepath = os.path.join(MAT_PATH, filename)
-    assert not os.path.exists(filepath)
+    # Make folder, deriving its name from parameter values
+    mat_path = os.path.join(MAT_ROOT, get_mat_folder_name(params))
+    try:
+        os.mkdir(mat_path)
+    except FileExistsError:
+        pass
+
+    filepath = os.path.join(mat_path, filename)
+    assert OVERWRITE or not os.path.exists(filepath)
     savemat(filepath, dict_out, appendmat=False, oned_as='column')
 
 
-def save_test_data(train_route, test_route, df, train_skip, test_skip, im_size, preprocess):
+def save_train_data(analysis, preprocess, params):
+    save_df('train.mat', analysis.train_entries, params)
+
+
+def save_test_data(train_route, test_route, df, preprocess, params):
     # This column contains a huuuuge amount of data, so let's do without it.
     # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
     df.drop('differences', axis=1, inplace=True)
@@ -63,14 +75,22 @@ def save_test_data(train_route, test_route, df, train_skip, test_skip, im_size, 
     # These are possibly confusing
     df.drop(columns=['yaw', 'best_snap'], axis=1, inplace=True)
 
-    save_df(f'test_{test_route.name}.mat', df, test_route)
+    save_df(f'test_{test_route.name}.mat', df, params)
+
+
+def archive_data(params):
+    mat_suffix = get_mat_folder_name(params)
+    make_archive(mat_suffix, 'zip', root_dir=MAT_ROOT, base_dir=mat_suffix)
 
 
 paths = rc_car_big.get_paths()
-analysis = rc_car_big.run_analysis(
+rc_car_big.run_analysis(
     paths[0],
     [paths[1]],
-    [TRAIN_SKIP], [TEST_SKIP], [IM_SIZE], [PREPROC], save_test_data)[0]
-save_df('train.mat', analysis.train_entries, analysis.train_route)
-
-make_archive(MAT_SUFFIX, 'zip', root_dir=MAT_ROOT, base_dir=MAT_SUFFIX)
+    TRAIN_SKIP,
+    TEST_SKIP,
+    IM_SIZE,
+    PREPROC,
+    train_hook=save_train_data,
+    test_hook=save_test_data,
+    post_test_hook=archive_data)

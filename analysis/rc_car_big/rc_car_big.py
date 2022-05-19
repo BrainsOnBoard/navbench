@@ -44,25 +44,31 @@ def get_gps_quality(df):
 
 def run_analysis(
         train_route_path, test_route_paths, train_skips, test_skips, im_sizes,
-        preprocess_strs, process_data=None):
+        preprocess_strs, train_hook=None, test_hook=None, post_test_hook=None):
     train_route = bobnav.Database(train_route_path)
     test_routes = [bobnav.Database(path) for path in test_route_paths]
 
-    analysis_lst = []
     for train_skip in train_skips:
         for test_skip in test_skips:
             for im_size in im_sizes:
                 for preprocess_str in preprocess_strs:
                     preprocess = (ip.resize(*im_size), eval(preprocess_str))
                     analysis = Analysis(train_route, train_skip, preprocess=preprocess)
+
+                    params = {
+                        'train_skip': train_skip, 'test_skip': test_skip,
+                        'im_size': im_size, 'preprocess': preprocess_str}
+                    if train_hook:
+                        train_hook(analysis, preprocess, { 'database_name': train_route.name, **params })
+
                     for test_route in test_routes:
                         df = analysis.get_headings(test_route, test_skip)
-                        if process_data:
-                            process_data(train_route, test_route, df, train_skip, test_skip, im_size, preprocess)
+                        if test_hook:
+                            test_hook(train_route, test_route, df, preprocess, {
+                                      'database_name': test_route.name, **params})
 
-                    analysis_lst.append(analysis)
-
-    return analysis_lst
+                    if post_test_hook:
+                        post_test_hook(params)
 
 
 class Analysis:
