@@ -54,33 +54,32 @@ def save_df(filename, df, params):
     savemat(filepath, dict_out, appendmat=False, oned_as='column')
 
 
-def save_train_data(analysis, preprocess, params):
-    save_df('train.mat', analysis.train_entries, params)
+class ExportMatFilesRunner:
+    def __init__(self, analysis, preprocess, params):
+        save_df('train.mat', analysis.train_entries, params)
 
+    def on_test(self, train_route, test_route, df, preprocess, params):
+        # This column contains a huuuuge amount of data, so let's do without it.
+        # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
+        df.drop('differences', axis=1, inplace=True)
 
-def save_test_data(train_route, test_route, df, preprocess, params):
-    # This column contains a huuuuge amount of data, so let's do without it.
-    # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
-    df.drop('differences', axis=1, inplace=True)
+        # Save RIDF for nearest point on training route too
+        train_images = train_route.read_images(
+            df.nearest_train_idx.to_list(),
+            preprocess=preprocess)
+        nearest_ridfs = []
+        for image, snap in zip(df.image, train_images):
+            nearest_ridfs.append(bobnav.ridf(image, snap))
+        df['nearest_ridf'] = nearest_ridfs
 
-    # Save RIDF for nearest point on training route too
-    train_images = train_route.read_images(
-        df.nearest_train_idx.to_list(),
-        preprocess=preprocess)
-    nearest_ridfs = []
-    for image, snap in zip(df.image, train_images):
-        nearest_ridfs.append(bobnav.ridf(image, snap))
-    df['nearest_ridf'] = nearest_ridfs
+        # These are possibly confusing
+        df.drop(columns=['yaw', 'best_snap'], axis=1, inplace=True)
 
-    # These are possibly confusing
-    df.drop(columns=['yaw', 'best_snap'], axis=1, inplace=True)
+        save_df(f'test_{test_route.name}.mat', df, params)
 
-    save_df(f'test_{test_route.name}.mat', df, params)
-
-
-def archive_data(params):
-    mat_suffix = get_mat_folder_name(params)
-    make_archive(mat_suffix, 'zip', root_dir=MAT_ROOT, base_dir=mat_suffix)
+    def on_finish(self, params):
+        mat_suffix = get_mat_folder_name(params)
+        make_archive(mat_suffix, 'zip', root_dir=MAT_ROOT, base_dir=mat_suffix)
 
 
 paths = rc_car_big.get_paths()
@@ -91,6 +90,4 @@ rc_car_big.run_analysis(
     TEST_SKIP,
     IM_SIZE,
     PREPROC,
-    train_hook=save_train_data,
-    test_hook=save_test_data,
-    post_test_hook=archive_data)
+    hook_class=ExportMatFilesRunner)
