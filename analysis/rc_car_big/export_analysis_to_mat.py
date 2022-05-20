@@ -85,7 +85,7 @@ def archive_data(params):
 
 paths = rc_car_big.get_paths()
 rc_car_big.run_analysis(
-    paths[0],
+    [paths[0]],
     [paths[1]],
     TRAIN_SKIP,
     TEST_SKIP,
