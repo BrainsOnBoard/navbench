@@ -1,6 +1,7 @@
 import os
 from glob import glob
 from shutil import make_archive
+from time import perf_counter
 from urllib.parse import urlencode
 
 import bob_robotics.navigation as bobnav
@@ -36,7 +37,10 @@ def load_databases(paths=get_paths(), limits_metres=None):
 
 @bobnav.cache_result
 def _get_pm_headings(pm, test_df):
-    return pm.ridf(test_df)
+    t0 = perf_counter()
+    df = pm.ridf(test_df)
+    df['computation_time'] = perf_counter() - t0
+    return df
 
 
 def to_merc(db):
