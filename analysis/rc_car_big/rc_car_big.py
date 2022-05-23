@@ -1,15 +1,19 @@
 import os
 from glob import glob
+from shutil import make_archive
+from urllib.parse import urlencode
 
 import bob_robotics.navigation as bobnav
-from bob_robotics.navigation import imgproc as ip
+import gm_plotting
 import numpy as np
 import pandas as pd
-
-import gm_plotting
+from bob_robotics.navigation import imgproc as ip
+from scipy.io import savemat
 
 ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 DBROOT = os.path.join(ROOT, 'datasets/rc_car/rc_car_big')
+MAT_ROOT = os.path.join(os.path.dirname(__file__), 'mat_files')
+OVERWRITE_MATS = True
 
 
 def get_paths():
@@ -17,7 +21,10 @@ def get_paths():
 
 
 def load_databases(paths=get_paths(), limits_metres=None):
-    dbs = [bobnav.Database(path, limits_metres=limits_metres, interpolate_xy=False) for path in paths]
+    dbs = [
+        bobnav.Database(
+            path, limits_metres=limits_metres, interpolate_xy=False)
+        for path in paths]
 
     # Check that we're using Thomas's sanitised CSV files
     for db in dbs:
@@ -42,11 +49,82 @@ def get_gps_quality(df):
     return df['GPS quality'].apply(pd.to_numeric, errors='coerce')
 
 
+def filter_col_name(name: str):
+    return name.replace("[", "").replace("]", "").replace(" ", "_")
+
+
+def get_mat_folder_name(params):
+    if 'database_name' in params:
+        params = params.copy()
+        del params['database_name']
+
+    params_ordered = sorted(params.items(), key=lambda val: val[0])
+    return urlencode(params_ordered, doseq=True).replace("&", "_")
+
+
+def save_df(filename, df, params):
+    df_out = df.rename(columns=filter_col_name)
+
+    # Don't give the absolute path, as that's probably not useful
+    df_out.filepath = df_out.filepath.apply(os.path.basename)
+
+    # Indexes start at 1 in Matlab
+    idx_cols = (col for col in df_out.columns if col.endswith("_idx"))
+    for col in idx_cols:
+        df_out[col] += 1
+
+    dict_out = {'params': params, **df_out.to_dict('list')}
+
+    # Make folder, deriving its name from parameter values
+    mat_path = os.path.join(MAT_ROOT, get_mat_folder_name(params))
+    try:
+        os.mkdir(mat_path)
+    except FileExistsError:
+        pass
+
+    filepath = os.path.join(mat_path, filename)
+    assert OVERWRITE_MATS or not os.path.exists(filepath)
+    savemat(filepath, dict_out, appendmat=False, oned_as='column')
+
+
+class ExportMatFilesRunner:
+    def __init__(self, analysis, preprocess, params):
+        save_df('train.mat', analysis.train_entries, params)
+
+    def on_test(self, train_route, test_route, df, preprocess, params):
+        # This column contains a huuuuge amount of data, so let's do without it.
+        # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
+        df.drop('differences', axis=1, inplace=True)
+
+        # Save RIDF for nearest point on training route too
+        train_images = train_route.read_images(
+            df.nearest_train_idx.to_list(),
+            preprocess=preprocess)
+        nearest_ridfs = []
+        for image, snap in zip(df.image, train_images):
+            nearest_ridfs.append(bobnav.ridf(image, snap))
+        df['nearest_ridf'] = nearest_ridfs
+
+        # These are possibly confusing
+        df.drop(columns=['yaw', 'best_snap'], axis=1, inplace=True)
+
+        save_df(f'test_{test_route.name}.mat', df, params)
+
+    def on_finish(self, params):
+        mat_suffix = get_mat_folder_name(params)
+        make_archive(mat_suffix, 'zip', root_dir=MAT_ROOT, base_dir=mat_suffix)
+
+
 def run_analysis(
         train_route_paths, test_route_paths, train_skips, test_skips, im_sizes,
-        preprocess_strs, hook_class):
+        preprocess_strs, runner_classes=None, do_export_mats=False):
     train_routes = [bobnav.Database(path) for path in train_route_paths]
     test_routes = [bobnav.Database(path) for path in test_route_paths]
+
+    if not runner_classes:
+        runner_classes = []
+    if do_export_mats:
+        runner_classes.append(ExportMatFilesRunner)
 
     for train_skip in train_skips:
         for test_skip in test_skips:
@@ -55,22 +133,30 @@ def run_analysis(
                     preprocess = (ip.resize(*im_size), eval(preprocess_str))
 
                     for train_route in train_routes:
-                        analysis = Analysis(train_route, train_skip, preprocess=preprocess)
+                        analysis = Analysis(
+                            train_route, train_skip, preprocess=preprocess)
                         params = {
                             'train_skip': train_skip, 'test_skip': test_skip,
                             'im_size': im_size, 'preprocess': preprocess_str}
-                        hooks = hook_class(analysis, preprocess, { 'database_name': train_route.name, **params })
+                        runners = [
+                            cur_class(
+                                analysis, preprocess,
+                                {'database_name': train_route.name, **params})
+                            for cur_class in runner_classes]
 
                         for test_route in test_routes:
                             df = analysis.get_headings(test_route, test_skip)
-                            hooks.on_test(train_route, test_route, df, preprocess, {
+                            for runner in runners:
+                                runner.on_test(train_route, test_route, df, preprocess, {
                                     'database_name': test_route.name, **params})
 
-                        hooks.on_finish(params)
+                        for runner in runners:
+                            runner.on_finish(params)
 
 
 class Analysis:
-    def __init__(self, train_route: bobnav.Database, train_skip, preprocess=None):
+    def __init__(self, train_route: bobnav.Database, train_skip,
+                 preprocess=None):
         self.train_route = train_route
         self.preprocess = preprocess
 
@@ -94,5 +180,6 @@ class Analysis:
         test_df['nearest_train_idx'] = nearest.index
         target_headings = nearest.heading
         dhead = np.array(target_headings) - np.array(test_df.estimated_heading)
-        test_df['heading_error'] = np.abs(bobnav.normalise180(np.rad2deg(dhead)))
+        test_df['heading_error'] = np.abs(
+            bobnav.normalise180(np.rad2deg(dhead)))
         return test_df

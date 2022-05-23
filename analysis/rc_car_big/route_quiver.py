@@ -85,4 +85,12 @@ class PlotRunner:
 
         plt.show()
 
-rc_car_big.run_analysis(paths[0:1], paths[1:], [TRAIN_SKIP], [TEST_SKIP], [IM_SIZE], [PREPROC], hook_class=PlotRunner)
+
+rc_car_big.run_analysis(
+    paths[0:1],
+    paths[1:],
+    [TRAIN_SKIP],
+    [TEST_SKIP],
+    [IM_SIZE],
+    [PREPROC],
+    runner_classes=[PlotRunner])
