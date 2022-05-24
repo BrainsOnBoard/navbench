@@ -1,8 +1,10 @@
 import os
 from glob import glob
 from shutil import make_archive
+import subprocess as sp
 from time import perf_counter
 from urllib.parse import urlencode
+from warnings import warn
 
 import bob_robotics.navigation as bobnav
 import gm_plotting
@@ -16,6 +18,34 @@ ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 DBROOT = os.path.join(ROOT, 'datasets/rc_car/rc_car_big')
 MAT_ROOT = os.path.join(os.path.dirname(__file__), 'mat_files')
 OVERWRITE_MATS = True
+
+_git_commit = None
+
+
+def _get_git_commit():
+    global _git_commit
+    if _git_commit:
+        return _git_commit
+
+    mydir = os.path.dirname(__file__)
+
+    # Try to make a version string based on status of git tree
+    try:
+        output = sp.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=mydir)
+        _git_commit = output.decode('utf-8').rstrip()
+
+        ret = sp.run(["git", "diff", "--no-ext-diff",
+                     "--quiet", "--exit-code"], cwd=mydir)
+        if ret.returncode != 0:
+            _git_commit += '.dirty'
+
+    except sp.CalledProcessError:
+        warn('Could not get current git commit; version of code is unknown')
+        _git_commit = 'UNKNOWN'
+
+    return _git_commit
 
 
 def get_paths():
@@ -78,7 +108,9 @@ def save_df(filename, df, params):
     for col in idx_cols:
         df_out[col] += 1
 
-    dict_out = {'params': params, **df_out.to_dict('list')}
+    dict_out = {
+        'params': params, 'git_commit': _get_git_commit(),
+        **df_out.to_dict('list')}
 
     # Make folder, deriving its name from parameter values
     mat_path = os.path.join(MAT_ROOT, get_mat_folder_name(params))
@@ -122,7 +154,8 @@ class ExportMatFilesRunner:
 
 def run_analysis(
         train_route_paths, test_route_paths, train_skips, test_skips, im_sizes,
-        preprocess_strs, runner_classes=None, show_plots=False, do_export_mats=False):
+        preprocess_strs, runner_classes=None, show_plots=False,
+        do_export_mats=False):
     train_routes = [bobnav.Database(path) for path in train_route_paths]
     test_routes = [bobnav.Database(path) for path in test_route_paths]
 
