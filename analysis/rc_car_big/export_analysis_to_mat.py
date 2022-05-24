@@ -16,4 +16,4 @@ rc_car_big.run_analysis(
     TEST_SKIP,
     IM_SIZE,
     PREPROC,
-    do_export_mats=True)
+    export_mats=True)

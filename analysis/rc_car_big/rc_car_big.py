@@ -157,13 +157,13 @@ class ExportMatFilesRunner:
 def run_analysis(
         train_route_paths, test_route_paths, train_skips, test_skips, im_sizes,
         preprocess_strs, runner_classes=None, show_plots=False,
-        do_export_mats=False):
+        export_mats=False):
     train_routes = [bobnav.Database(path) for path in train_route_paths]
     test_routes = [bobnav.Database(path) for path in test_route_paths]
 
     if not runner_classes:
         runner_classes = []
-    if do_export_mats:
+    if export_mats:
         runner_classes.append(ExportMatFilesRunner)
 
     for train_skip in train_skips:
