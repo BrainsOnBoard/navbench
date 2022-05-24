@@ -15,7 +15,7 @@ def distance2d(entry1, entry2):
 
 
 class RouteQuiver:
-    def __init__(self, analysis, train_skip, preprocess):
+    def __init__(self, analysis, preprocess, params):
         _, self.ax = plt.subplots()
 
         train_x, train_y = rc_car_big.to_merc(analysis.train_route)
@@ -40,7 +40,7 @@ class RouteQuiver:
         self.ax.legend(bbox_to_anchor=(1, 1))
 
 class DistanceVsError:
-    def __init__(self, analysis, train_skip, preprocess):
+    def __init__(self, analysis, preprocess, params):
         _, self.ax = plt.subplots()
 
     def on_test(self, train_route, test_route, df, preprocess, params):
