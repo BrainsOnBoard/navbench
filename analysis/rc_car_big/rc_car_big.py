@@ -109,7 +109,9 @@ def save_df(filename, df, params):
         df_out[col] += 1
 
     dict_out = {
-        'params': params, 'git_commit': _get_git_commit(),
+        'params': params,
+        'git_commit': _get_git_commit(),
+        'bob_robotics_version': bobnav.__version__,
         **df_out.to_dict('list')}
 
     # Make folder, deriving its name from parameter values
