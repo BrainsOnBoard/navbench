@@ -156,7 +156,7 @@ class ExportMatFilesRunner:
 
 def run_analysis(
         train_route_paths, test_route_paths, train_skips, test_skips, im_sizes,
-        preprocess_strs, runner_classes=None, show_plots=False,
+        preprocess_strs, test_skip_offsets=(0,), runner_classes=None, show_plots=False,
         export_mats=False):
     train_routes = [bobnav.Database(path) for path in train_route_paths]
     test_routes = [bobnav.Database(path) for path in test_route_paths]
@@ -166,35 +166,40 @@ def run_analysis(
     if export_mats:
         runner_classes.append(ExportMatFilesRunner)
 
-    for train_skip in train_skips:
-        for test_skip in test_skips:
-            for im_size in im_sizes:
-                for preprocess_str in preprocess_strs:
-                    preprocess = (ip.resize(*im_size), eval(preprocess_str))
+    for offset in test_skip_offsets:
+        assert offset >= 0
 
-                    for train_route in train_routes:
-                        analysis = Analysis(
-                            train_route, train_skip, preprocess=preprocess)
-                        params = {
-                            'train_skip': train_skip, 'test_skip': test_skip,
-                            'im_size': im_size, 'preprocess': preprocess_str}
-                        runners = [
-                            cur_class(
-                                analysis, preprocess,
-                                {'database_name': train_route.name, **params})
-                            for cur_class in runner_classes]
+        for train_skip in train_skips:
+            for test_skip in test_skips:
+                assert offset < test_skip
 
-                        for test_route in test_routes:
-                            df = analysis.get_headings(test_route, test_skip)
+                for im_size in im_sizes:
+                    for preprocess_str in preprocess_strs:
+                        preprocess = (ip.resize(*im_size), eval(preprocess_str))
+
+                        for train_route in train_routes:
+                            analysis = Analysis(
+                                train_route, train_skip, preprocess=preprocess)
+                            params = {
+                                'train_skip': train_skip, 'test_skip': test_skip,
+                                'im_size': im_size, 'preprocess': preprocess_str}
+                            runners = [
+                                cur_class(
+                                    analysis, preprocess,
+                                    {'database_name': train_route.name, **params})
+                                for cur_class in runner_classes]
+
+                            for test_route in test_routes:
+                                df = analysis.get_headings(test_route, test_skip, offset)
+                                for runner in runners:
+                                    runner.on_test(train_route, test_route, df, preprocess, {
+                                        'database_name': test_route.name, **params})
+
                             for runner in runners:
-                                runner.on_test(train_route, test_route, df, preprocess, {
-                                    'database_name': test_route.name, **params})
+                                runner.on_finish(params)
 
-                        for runner in runners:
-                            runner.on_finish(params)
-
-                        if show_plots:
-                            plt.show()
+                            if show_plots:
+                                plt.show()
 
 
 class Analysis:
@@ -211,9 +216,9 @@ class Analysis:
         self.pm = bobnav.PerfectMemory(self.train_entries.image[0].shape)
         self.pm.train(self.train_entries)
 
-    def get_headings(self, test_route, test_skip):
+    def get_headings(self, test_route, test_skip, test_skip_offset=0):
         test_df = test_route.read_image_entries(
-            test_route.iloc[:: test_skip],
+            test_route.iloc[test_skip_offset::test_skip],
             preprocess=self.preprocess)
         print(f'Test images: {len(test_df)}')
 
