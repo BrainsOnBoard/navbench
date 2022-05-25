@@ -70,6 +70,11 @@ def _get_pm_headings(pm, test_df):
     t0 = perf_counter()
     df = pm.ridf(test_df)
     df['computation_time'] = perf_counter() - t0
+
+    # This column contains a huuuuge amount of data, so let's do without it.
+    # Otherwise the cache folder will end up massive.
+    df.drop('differences', axis=1, inplace=True)
+
     return df
 
 
@@ -131,10 +136,6 @@ class ExportMatFilesRunner:
         save_df('train.mat', analysis.train_entries, params)
 
     def on_test(self, train_route, test_route, df, preprocess, params):
-        # This column contains a huuuuge amount of data, so let's do without it.
-        # (Removing it decreased the size of my .mat file from >600MB to <1MB.)
-        df.drop('differences', axis=1, inplace=True)
-
         # Save RIDF for nearest point on training route too
         train_images = train_route.read_images(
             df.nearest_train_idx.to_list(),
