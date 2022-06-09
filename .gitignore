@@ -3,6 +3,7 @@
 *.pyc
 *.pkl
 *.zip
+*.db
 
 # Jupyter Notebook
 .ipynb_checkpoints
