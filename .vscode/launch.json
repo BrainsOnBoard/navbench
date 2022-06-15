@@ -21,6 +21,14 @@
             "args": []
         },
         {
+            "name": "paramspace_test.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/analysis/rc_car_big/paramspace_test.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
             "name": "route_quiver.py",
             "type": "python",
             "request": "launch",
