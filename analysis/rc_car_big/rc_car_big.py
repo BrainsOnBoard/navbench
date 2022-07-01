@@ -16,7 +16,9 @@ DBROOT = os.path.join(ROOT, 'datasets/rc_car/rc_car_big')
 
 
 def get_paths():
-    return glob(os.path.join(DBROOT, 'unwrapped_*'))
+    paths = glob(os.path.join(DBROOT, 'unwrapped_*'))
+    assert paths
+    return paths
 
 
 def load_databases(paths=get_paths(), limits_metres=None):
