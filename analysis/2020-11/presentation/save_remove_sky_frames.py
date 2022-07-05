@@ -2,7 +2,8 @@
 
 import os
 import sys
-sys.path.append('../../..')
+
+sys.path.append("../../..")
 
 import cv2
 import numpy as np
@@ -10,13 +11,13 @@ import numpy as np
 import navbench as nb
 from navbench import imgproc as ip
 
-dbpath = '../../../datasets/rc_car/Stanmer_park_dataset/0411/unwrapped_dataset1'
+dbpath = "../../../datasets/rc_car/Stanmer_park_dataset/0411/unwrapped_dataset1"
 
 db = nb.Database(dbpath)
 head, tail = os.path.split(dbpath)
-if tail == '':
+if tail == "":
     _, tail = os.path.split(head)
-new_dpath = tail + '_nosky'
+new_dpath = tail + "_nosky"
 if not os.path.exists(new_dpath):
     os.mkdir(new_dpath)
 
