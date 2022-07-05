@@ -17,7 +17,6 @@ notebook = "^6.4.12"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
-pytest = "^7.1.2"
 isort = "^5.10.1"
 pre-commit = "^2.19.0"
 
