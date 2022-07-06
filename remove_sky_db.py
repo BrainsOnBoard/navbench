@@ -5,15 +5,16 @@ import os
 import sys
 
 import cv2
+
 import navbench as nb
 from navbench import imgproc as ip
 
 for dbpath in sys.argv[1:]:
     db = nb.Database(dbpath)
     head, tail = os.path.split(dbpath)
-    if tail == '':
+    if tail == "":
         _, tail = os.path.split(head)
-    new_dpath = tail + '_nosky'
+    new_dpath = tail + "_nosky"
     if not os.path.exists(new_dpath):
         os.mkdir(new_dpath)
 

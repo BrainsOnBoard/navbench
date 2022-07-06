@@ -22,24 +22,22 @@ class RIDFViewer(nb.Database):
         else:
             self.goal = goal
         self.frame = goal
-        print('Goal:', goal)
+        print("Goal:", goal)
 
         if bound_size is None:
             bound_size = 100
-        self.bounds = (max(0, goal - bound_size),
-                       min(len(self) - 1, goal + bound_size))
-        print('Bounds:', self.bounds)
+        self.bounds = (max(0, goal - bound_size), min(len(self) - 1, goal + bound_size))
+        print("Bounds:", self.bounds)
 
         self.ax_imshow.set_xticks([])
         self.ax_imshow.set_yticks([])
-        self.figure.canvas.mpl_connect(
-            'button_press_event', self.mouse_clicked)
+        self.figure.canvas.mpl_connect("button_press_event", self.mouse_clicked)
 
         resize = ip.resize(55, 180)
         entries = range(*self.bounds)
         self.images = self.read_images(entries, resize)
         self.snap = self.read_images(goal, resize)
-        print(len(self.images), 'images loaded')
+        print(len(self.images), "images loaded")
 
         errs = nb.route_ridf_errors(self.images, self.snap)
         ca = nb.calculate_rca(errs, medfilt_size=3)
@@ -47,7 +45,7 @@ class RIDFViewer(nb.Database):
 
         self.ax_goal.set_xticks([])
         self.ax_goal.set_yticks([])
-        self.ax_goal.imshow(self.snap, cmap='gray')
+        self.ax_goal.imshow(self.snap, cmap="gray")
 
     def mouse_clicked(self, event):
         if event.inaxes == self.ax_plot and event.button == 1:
@@ -59,10 +57,10 @@ class RIDFViewer(nb.Database):
         ridf = nb.ridf(image, self.snap)
 
         if self.axes_image is None:
-            self.axes_image = self.ax_imshow.imshow(image, cmap='gray')
+            self.axes_image = self.ax_imshow.imshow(image, cmap="gray")
         else:
             self.axes_image.set_data(image)
-        self.ax_imshow.set_title('Frame %i/%i' % (self.frame + 1, len(self)))
+        self.ax_imshow.set_title("Frame %i/%i" % (self.frame + 1, len(self)))
         nb.plot_ridf(ridf, self.ax_ridf)
         self.figure.canvas.draw()
 
@@ -73,16 +71,21 @@ class RIDFViewer(nb.Database):
 
 def main():
     parser = ArgumentParser(
-        description='A tool for comparing image differences within an image database')
-    parser.add_argument('--goal', nargs='?', type=int, help='goal frame')
-    parser.add_argument('--bound-size', nargs='?', type=int,
-                        help='number of frames either side of goal to test')
-    parser.add_argument('database', help='database path')
+        description="A tool for comparing image differences within an image database"
+    )
+    parser.add_argument("--goal", nargs="?", type=int, help="goal frame")
+    parser.add_argument(
+        "--bound-size",
+        nargs="?",
+        type=int,
+        help="number of frames either side of goal to test",
+    )
+    parser.add_argument("database", help="database path")
     args = parser.parse_args()
 
     viewer = RIDFViewer(args.database, args.goal, args.bound_size)
     viewer.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

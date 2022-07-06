@@ -23,24 +23,22 @@ class IDFViewer(nb.Database):
         else:
             self.goal = goal
         self.frame = goal
-        print('Goal:', goal)
+        print("Goal:", goal)
 
         if bound_size is None:
             bound_size = 100
-        self.bounds = (max(0, goal - bound_size),
-                       min(len(self) - 1, goal + bound_size))
-        print('Bounds:', self.bounds)
+        self.bounds = (max(0, goal - bound_size), min(len(self) - 1, goal + bound_size))
+        print("Bounds:", self.bounds)
 
         self.ax_imshow.set_xticks([])
         self.ax_imshow.set_yticks([])
-        self.figure.canvas.mpl_connect(
-            'button_press_event', self.mouse_clicked)
+        self.figure.canvas.mpl_connect("button_press_event", self.mouse_clicked)
 
         resize = ip.resize(55, 180)
         entries = range(*self.bounds)
         self.images = self.read_images(entries, resize)
         self.snap = self.read_images(goal, resize)
-        print(len(self.images), 'images loaded')
+        print(len(self.images), "images loaded")
 
         idf = nb.route_idf(self.images, self.snap)
         ca = nb.calculate_ca(idf, medfilt_size=3)
@@ -48,7 +46,7 @@ class IDFViewer(nb.Database):
 
         self.ax_goal.set_xticks([])
         self.ax_goal.set_yticks([])
-        self.ax_goal.imshow(self.snap, cmap='gray')
+        self.ax_goal.imshow(self.snap, cmap="gray")
 
         self.ax_diff.set_xticks([])
         self.ax_diff.set_yticks([])
@@ -64,15 +62,15 @@ class IDFViewer(nb.Database):
         diffim = (diffim + 1) / 2
 
         if self.axes_image is None:
-            self.axes_image = self.ax_imshow.imshow(image, cmap='gray')
+            self.axes_image = self.ax_imshow.imshow(image, cmap="gray")
 
             # **HACK**: If we show diffim here then axes_diffim ends up screwed
             # for some reason...
-            self.axes_diffim = self.ax_diff.imshow(image, cmap='hot')
+            self.axes_diffim = self.ax_diff.imshow(image, cmap="hot")
         else:
             self.axes_image.set_data(image)
             self.axes_diffim.set_data(diffim)
-        self.ax_imshow.set_title('Frame %i/%i' % (self.frame + 1, len(self)))
+        self.ax_imshow.set_title("Frame %i/%i" % (self.frame + 1, len(self)))
         self.figure.canvas.draw()
 
     def run(self):
@@ -82,16 +80,21 @@ class IDFViewer(nb.Database):
 
 def main():
     parser = ArgumentParser(
-        description='A tool for comparing image differences within an image database')
-    parser.add_argument('--goal', nargs='?', type=int, help='goal frame')
-    parser.add_argument('--bound-size', nargs='?', type=int,
-                        help='number of frames either side of goal to test')
-    parser.add_argument('database', help='database path')
+        description="A tool for comparing image differences within an image database"
+    )
+    parser.add_argument("--goal", nargs="?", type=int, help="goal frame")
+    parser.add_argument(
+        "--bound-size",
+        nargs="?",
+        type=int,
+        help="number of frames either side of goal to test",
+    )
+    parser.add_argument("database", help="database path")
     args = parser.parse_args()
 
     viewer = IDFViewer(args.database, args.goal, args.bound_size)
     viewer.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
