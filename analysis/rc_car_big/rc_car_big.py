@@ -17,7 +17,7 @@ DBROOT = os.path.join(ROOT, "datasets/rc_car/rc_car_big")
 
 
 def get_paths():
-    paths = glob(os.path.join(DBROOT, "unwrapped_*"))
+    paths = sorted(glob(os.path.join(DBROOT, "unwrapped_*")))
     assert paths
     return paths
 
